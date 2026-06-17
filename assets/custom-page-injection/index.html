@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>七巧注入式前后端测试 Demo</title>
+</head>
+<body>
+  <main id="app" class="qq-shell">
+    <section class="qq-hero">
+      <div>
+        <p class="qq-kicker">七巧 Custom Page · Injection Mode</p>
+        <h1>前后端可用性测试台</h1>
+        <p class="qq-lead">这个页面不手动引用 index.css / index.js，用来验证七巧 IDE 是否自动注入前端三文件，以及服务端 API 是否能被前端调用。</p>
+      </div>
+      <div class="qq-status" id="overallStatus">等待 JS 注入</div>
+    </section>
+
+    <section class="qq-grid">
+      <article class="qq-card">
+        <h2>前端注入检测</h2>
+        <div class="qq-check" data-check="html"><span>WAIT</span><b>HTML 渲染</b><em>能看到页面即通过</em></div>
+        <div class="qq-check" data-check="css"><span>WAIT</span><b>index.css 自动注入</b><em>检测 CSS 变量和样式探针</em></div>
+        <div class="qq-check" data-check="js"><span>WAIT</span><b>index.js 自动执行</b><em>JS 初始化后会改成通过</em></div>
+        <div class="qq-check" data-check="event"><span>WAIT</span><b>按钮事件绑定</b><em>点击“前端自检”后验证</em></div>
+        <div class="qq-check" data-check="module"><span>WAIT</span><b>动态 module 能力</b><em>检测平台是否允许 module 执行</em></div>
+      </article>
+
+      <article class="qq-card">
+        <h2>七巧运行环境</h2>
+        <div class="qq-check" data-check="ids"><span>WAIT</span><b>applicationId / businessId</b><em>优先从 URL path 解析，兼容 query 参数</em></div>
+        <div class="qq-check" data-check="token"><span>WAIT</span><b>X-Auth0-Token</b><em>后端接口可能需要这个 token；没有也会尝试调用并记录错误</em></div>
+        <div class="qq-check" data-check="api-url"><span>WAIT</span><b>后端执行接口地址</b><em>按开发手册拼接 dev-runtime execute 接口</em></div>
+        <div class="qq-check" data-check="backend"><span>WAIT</span><b>服务端 API 调用</b><em>点击下面按钮发起真实调用</em></div>
+        <div class="qq-check" data-check="mock"><span>WAIT</span><b>本地/预览兜底</b><em>非七巧运行环境下返回本地模拟结果</em></div>
+      </article>
+    </section>
+
+    <section class="qq-card">
+      <h2>操作区</h2>
+      <div class="qq-actions">
+        <button id="runFrontend" type="button">前端自检</button>
+        <button id="callHealth" type="button">调用 health()</button>
+        <button id="callHello" type="button">调用 hello("七巧")</button>
+        <button id="callAdd" type="button">调用 add(7, 35)</button>
+        <button id="callEcho" type="button">调用 echo({message})</button>
+        <button id="copyReport" type="button">复制报告</button>
+      </div>
+      <div id="cssProbe" class="qq-probe">CSS 探针：如果 index.css 已注入，这里会显示绿色边框和 PASS 文案。</div>
+    </section>
+
+    <section class="qq-card">
+      <h2>服务端返回</h2>
+      <pre id="resultBox">等待调用。</pre>
+    </section>
+
+    <section class="qq-card">
+      <h2>诊断日志</h2>
+      <pre id="logBox">等待 index.js 注入。</pre>
+    </section>
+  </main>
+
+  <noscript>当前环境禁用了 JavaScript，index.js 无法执行。</noscript>
+</body>
+</html>

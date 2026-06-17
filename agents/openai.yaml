@@ -1,0 +1,4 @@
+interface:
+  display_name: "七巧开发"
+  short_description: "开发七巧自定义页面、服务端代码、表单表格 API 和注入式三文件交付。"
+  default_prompt: "使用七巧开发 skill，按七巧注入式前端、服务端 API、预览/调试/发布差异和自检流程完成开发。"
