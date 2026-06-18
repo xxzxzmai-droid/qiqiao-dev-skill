@@ -75,8 +75,8 @@ func TestBuildUpdateRecordPayloadKeepsCurrentVersion(t *testing.T) {
 }
 
 func TestNormalizeBaseURL(t *testing.T) {
-	got := NormalizeBaseURL("http://10.10.85.239/qiqiao/runtime/api/v1/bpms-integration///")
-	want := "http://10.10.85.239/qiqiao/runtime/api/v1/bpms-integration"
+	got := NormalizeBaseURL("http://intranet-qiqiao.example.local/qiqiao/runtime/api/v1/bpms-integration///")
+	want := "http://intranet-qiqiao.example.local/qiqiao/runtime/api/v1/bpms-integration"
 	if got != want {
 		t.Fatalf("NormalizeBaseURL() = %q, want %q", got, want)
 	}

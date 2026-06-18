@@ -49,14 +49,20 @@ Rules:
 - Cache the token during a test run; do not request it for every button click.
 - Do not print token values. Redact as first 6 + `***` + last 4 if a diagnostic needs proof.
 - Respect the documented low-frequency limit. Prefer one `probe` run, then targeted calls.
+- Do not intentionally probe the exact production rate-limit threshold by "calling until it fails". That burns the same limit window real users need. Use conservative queue spacing and retry behavior instead.
 - When calling the public `https://e.csg.cn/...` base from local scripts, use the reference script's browser-like `User-Agent` and `Accept` headers. A bare HTTP client may receive a `403` HTML gateway response even when credentials are correct.
 
 If a deployed report first shows token/schema/query success and later fails with `access_key 失败：超出请求频率限制`, treat the OpenAPI path as connected but over-called. Reduce calls before changing credentials or base URLs:
 
 - Combine first-page initialization into one backend method such as `API.bootstrap()` that returns current user, schema fields, and the first reservation query in one execute call.
 - Avoid separate `schema` then `queryReservations` calls on every refresh; have `queryReservations` return the effective field map when needed.
+- After bootstrap, pass the effective field map into later CRUD backend calls so they do not re-fetch `/form_models/{id}` on every query/create/cancel.
 - Do not call `/open/users/account` for every reserver or attendee if Qiqiao server-side contact functions are available. Prefer `$.contact.getUserByUserAccount(account)` and fall back to OpenAPI only when contact lookup is unavailable.
 - On submit, let backend `createReservation` perform the final conflict query and create in one method. Frontend should use its loaded records for immediate UX feedback, not as an extra pre-submit OpenAPI call.
+- After create/cancel succeeds, update the visible schedule from the returned backend record first. Do not immediately call `queryReservations` again unless the user manually asks for read-back verification.
+- Add cooldowns to manual refresh and diagnostic actions. A useful starting point is 15 seconds for refresh and 30 seconds for diagnostics, with a clear UI message instead of repeated backend calls.
+- In formal pages, route create/cancel through a single frontend write queue. Persist the last backend-call timestamp in local storage so reloads do not immediately burst token calls again. For strict deployments, start with at least 60 seconds between write calls and retry rate-limit failures with a longer delay.
+- If cancellation hits a rate limit, keep the record visually marked as "cancel syncing" and retry in the background. Do not claim the slot is fully released until the backend status update succeeds.
 - After a rate-limit report, wait for the platform window to cool down before rerunning destructive or repeated diagnostics.
 
 ## Form data OpenAPI
@@ -114,6 +120,8 @@ For the single-record `PUT /forms/{formModelId}` path, pass the current version 
 
 Use exact form component names and value shapes from `GET /form_models/{formModelId}` before writing filters or payloads. Dates commonly need timestamps; option fields may need stored option values or indexes, not display text.
 
+If a field changes type, update the write payload shape and tests immediately. For example, when `参会人` changes from `multiUserSelect` to `textarea`, write a string such as `"张三\n李四"` rather than a user ID array, and stop resolving each attendee through contact/OpenAPI. Keep only the reserver/approver fields as user IDs when the form field type requires it.
+
 For reservation-style tools, prefer a status field over destructive cancellation when business audit history matters. The tested meeting-room pattern writes:
 
 ```json
@@ -141,7 +149,7 @@ Then cancel by `PUT /open/applications/{applicationId}/forms/{formModelId}` with
 When a `10.*` base URL returns `502` and the remote IP is `127.0.0.1`, the local proxy probably intercepted an intranet URL. Prefer the public `https://e.csg.cn/...` base when the user provides it. If the user specifically needs the intranet path, test direct access before changing code:
 
 ```bash
-curl --noproxy '*' -m 8 http://10.10.85.239/qiqiao/runtime/api/v1/bpms-integration/
+curl --noproxy '*' -m 8 http://<intranet-qiqiao-host>/qiqiao/runtime/api/v1/bpms-integration/
 ```
 
 For Go tools, use the public base by default. Enable `--use-proxy` only when the target path requires the system proxy; otherwise keep direct transport for intranet addresses.
@@ -221,9 +229,9 @@ Recommended flow:
 - Frontend loads current room/date/state and asks `API.queryReservations(params)` for records.
 - Frontend asks `API.resolveUser()` to prefill the reserver. If runtime user lookup fails, the backend may use a configured-account fallback only when the diagnostic response marks that source clearly.
 - Frontend posts a normalized payload to `API.createReservation(payload)`.
-- Backend validates required fields, room, date, half-hour start/end boundaries, status values, and overlap conflicts before calling OpenAPI create.
+- Backend resolves only fields that actually require user IDs, then validates required fields, room, date, half-hour start/end boundaries, status values, and overlap conflicts before calling OpenAPI create.
 - Backend cancels by updating the status field rather than deleting rows, unless the business explicitly wants destructive deletes.
-- Frontend refreshes from `API.queryReservations` after create/cancel; do not trust optimistic UI as the final source of truth.
+- Frontend can update the schedule from the returned create/cancel result immediately. On strict-rate deployments, make read-back refresh manual or cooled down instead of automatic.
 
 Backend `diagnose()` should be non-destructive. It may check:
 - Qiqiao HTTP client availability.

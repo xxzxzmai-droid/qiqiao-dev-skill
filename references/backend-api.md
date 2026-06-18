@@ -195,7 +195,17 @@ var API = {
 };
 ```
 
-When `$.context` cannot resolve the current runtime user, a server-side fallback to a configured account is acceptable for smoke testing, but return a `source` such as `context` or `configured-account-fallback` so the page and diagnostic report make the identity path explicit.
+For the current runtime user, follow Qiqiao's documented custom-page pattern:
+
+```js
+var user = $.context.getCurrentUser();
+var userId = $.context.getCurrentUserId();
+var userById = $.contact.getUserById(userId);
+```
+
+Prefer `$.context.getCurrentUser()` when it returns a usable `UserDTO`. If it only returns an ID or no name, use `$.contact.getUserById(userId)` to resolve the display name/account. Do not stop at a placeholder such as `"当前用户"` when a real user ID is present.
+
+When `$.context` cannot resolve the current runtime user, a server-side fallback to a configured account is acceptable for smoke testing, but return a `source` such as `context-user`, `context-contact-by-id`, or `configured-account-fallback` so the page and diagnostic report make the identity path explicit.
 
 For user lookup, prefer Qiqiao's contact library before OpenAPI when available:
 
@@ -206,6 +216,14 @@ var user = $.contact.getUserByUserAccount(account);
 This avoids spending OpenAPI token requests on reserver/attendee parsing. If contact lookup is unavailable, fall back to `/open/users/account` and make the diagnostic source explicit.
 
 For pages that load data immediately, expose a `bootstrap` method and have the frontend call it once on init. Returning user, field mapping, and first-page records together prevents a startup burst of `currentUser` + `schema` + `queryReservations` execute calls, which can trigger `access_key` frequency limits on deployments with strict token throttling.
+
+When `queryReservations`, `createReservation`, or `cancelReservation` are called after bootstrap, let the frontend pass the effective field map back to the backend so those methods do not have to fetch the form model/schema every time. On create/cancel success, return enough record data for the frontend to update the local schedule immediately; avoid an automatic post-submit refresh on deployments that rate-limit `access_key`.
+
+Do not split one business submit into multiple frontend server calls for each person field. For reservation-style pages, let `createReservation(payload)` resolve the reserver and write in one backend invocation. Free-text fields such as attendee names, departments, or phone numbers should be written as text and must not be resolved through `$.contact` or `/open/users/account`.
+
+For strict-rate deployments, put create/cancel behind a frontend queue rather than letting each click call `REST.API.*` immediately. Persist the last call timestamp across reloads, serialize writes, and convert rate-limit failures into delayed retries. Cancellation should show a pending-sync state until the backend status update succeeds.
+
+For user-facing diagnostics, format timestamps in the business timezone, usually `Asia/Shanghai +08:00`, instead of raw UTC `toISOString()` values. Keep epoch millisecond timestamps for token signing and IDs unchanged.
 
 ## Self-hosted API strategy
 

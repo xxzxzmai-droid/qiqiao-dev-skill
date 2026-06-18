@@ -44,8 +44,25 @@ Observed and expected from the docs:
 
 7. Page cannot read the current user:
    - First verify which runtime user APIs exist in `$.context` or the page context for the current deployment.
+   - In Qiqiao server code, test `$.context.getCurrentUser()`, `$.context.getCurrentUserId()`, and `$.contact.getUserById(userId)` before falling back to a configured account.
    - If the user API is unavailable, let backend diagnostics report the failure and optionally resolve the configured backend account for testing.
-   - Surface the user source in the UI/diagnostic report, for example `context`, `url`, `configured-account-fallback`, or `unresolved`.
+   - Surface a `userProbe` in the diagnostic report with booleans for context user ID, context user object, contact-by-ID, configured-account fallback, and the final source.
+   - Surface the user source in the UI/diagnostic report, for example `context-user`, `context-contact-by-id`, `url`, `configured-account-fallback`, or `unresolved`.
+
+8. Report times look eight hours behind Beijing time:
+   - A timestamp ending in `Z` is UTC. Do not treat `2026-06-18T05:37:00Z` as proof that the backend clock is wrong; it is `2026-06-18 13:37:00` in Beijing.
+   - Format user-facing diagnostics and server health times as `Asia/Shanghai +08:00` for Chinese business users.
+   - Keep epoch millisecond timestamps unchanged for OpenAPI token signing, IDs, and date field values.
+
+9. Long backend errors stretch or break the mobile layout:
+   - Do not render raw gateway URLs, HTML snippets, stack traces, or JSON blobs directly inside narrow cards.
+   - Show a short business-readable message in the page, cap the message box height, and put full details in the copyable diagnostic report.
+   - Add CSS wrapping constraints such as `min-width: 0`, `max-width: 100%`, `overflow-wrap: anywhere`, and a scrollable max-height for diagnostic/error panels.
+
+10. Debug build behavior leaks into the formal release:
+   - Keep a diagnostic build while the page is unstable, but produce a separate formal build for ordinary users.
+   - Formal builds should remove visible diagnostic buttons/panels and should not expose destructive or high-frequency diagnostic actions to end users.
+   - Keep guarded non-JSON parsing and friendly user messages in the formal build; remove only the visible diagnostic UI.
 
 ## Validation
 
@@ -83,5 +100,6 @@ Do not describe a local comprehensive diagnostic as proof that Qiqiao production
 - Include whether backend code is required.
 - Include whether local runtime simulation passed, and separately whether Qiqiao runtime diagnostics passed.
 - Include whether the frontend has a copyable diagnostics panel and whether `API.health()` / `API.diagnose()` passed.
+- For formal releases, state explicitly when diagnostic UI has been removed and whether a separate diagnostic build remains available for troubleshooting.
 - Include expected Qiqiao test path: preview for frontend, debug for server breakpoints/logs, publish for runtime user testing.
 - Ask the user to paste the self-check JSON report if Qiqiao behavior differs from local simulation.
