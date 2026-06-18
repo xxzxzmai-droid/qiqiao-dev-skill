@@ -185,6 +185,7 @@ For protected form writes, prefer this method surface in `server-code.js`:
 ```js
 var API = {
   health: function () { return { ok: true, time: new Date().toISOString() }; },
+  bootstrap: function () { /* current user + schema fields + first query in one call */ },
   diagnose: function () { /* token/schema/query/user probes only; no create */ },
   schema: function () { /* form model/component summary */ },
   queryReservations: function (params) { /* read form records */ },
@@ -195,6 +196,16 @@ var API = {
 ```
 
 When `$.context` cannot resolve the current runtime user, a server-side fallback to a configured account is acceptable for smoke testing, but return a `source` such as `context` or `configured-account-fallback` so the page and diagnostic report make the identity path explicit.
+
+For user lookup, prefer Qiqiao's contact library before OpenAPI when available:
+
+```js
+var user = $.contact.getUserByUserAccount(account);
+```
+
+This avoids spending OpenAPI token requests on reserver/attendee parsing. If contact lookup is unavailable, fall back to `/open/users/account` and make the diagnostic source explicit.
+
+For pages that load data immediately, expose a `bootstrap` method and have the frontend call it once on init. Returning user, field mapping, and first-page records together prevents a startup burst of `currentUser` + `schema` + `queryReservations` execute calls, which can trigger `access_key` frequency limits on deployments with strict token throttling.
 
 ## Self-hosted API strategy
 

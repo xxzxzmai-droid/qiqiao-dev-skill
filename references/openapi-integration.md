@@ -51,6 +51,14 @@ Rules:
 - Respect the documented low-frequency limit. Prefer one `probe` run, then targeted calls.
 - When calling the public `https://e.csg.cn/...` base from local scripts, use the reference script's browser-like `User-Agent` and `Accept` headers. A bare HTTP client may receive a `403` HTML gateway response even when credentials are correct.
 
+If a deployed report first shows token/schema/query success and later fails with `access_key 失败：超出请求频率限制`, treat the OpenAPI path as connected but over-called. Reduce calls before changing credentials or base URLs:
+
+- Combine first-page initialization into one backend method such as `API.bootstrap()` that returns current user, schema fields, and the first reservation query in one execute call.
+- Avoid separate `schema` then `queryReservations` calls on every refresh; have `queryReservations` return the effective field map when needed.
+- Do not call `/open/users/account` for every reserver or attendee if Qiqiao server-side contact functions are available. Prefer `$.contact.getUserByUserAccount(account)` and fall back to OpenAPI only when contact lookup is unavailable.
+- On submit, let backend `createReservation` perform the final conflict query and create in one method. Frontend should use its loaded records for immediate UX feedback, not as an extra pre-submit OpenAPI call.
+- After a rate-limit report, wait for the platform window to cool down before rerunning destructive or repeated diagnostics.
+
 ## Form data OpenAPI
 
 Confirmed documented form endpoints include:
