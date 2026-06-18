@@ -65,6 +65,17 @@ Open the harness to verify basic rendering and event binding. Do not upload the 
 
 For fullstack pages with `server-code.js`, prefer a local runtime simulator over a static harness. The simulator should serve a Qiqiao-like `/bpms-runtime/business/.../custompage/code/index.html` URL and a local `/custompage/code/execute` endpoint. Passing this local runtime smoke test means the app code, execute bridge, server API methods, and OpenAPI CRUD can work together; it does not prove Qiqiao's real gateway path, login token, published-version routing, or `$.context` user data.
 
+For production-grade fullstack pages, add a comprehensive diagnostic gate instead of only testing the latest failing method. The gate should produce a JSON report and a short Markdown summary, and should include:
+
+- Static checks: three-file injection contract, no manual `index.css` / `index.js` loading, no Vite chunk assumptions, frontend secret scan, server syntax, and core frontend logic tests.
+- Execute checks: local Qiqiao-like runtime page URL, local `/custompage/code/execute`, `API.health()`, and guarded handling for non-JSON/HTML responses.
+- Backend checks: `API.diagnose()`, `$.httpclient` method inventory, active OpenAPI base URL, candidate base URLs, and per-base failures with secrets redacted.
+- OpenAPI checks: token, schema/component lookup, required field mapping, query, current-user or configured-account fallback, and exact value-shape validation for dates/times/options/users.
+- Write-path checks when the user allows form pollution: create a test record, query it back, assert duplicate/conflict rejection, assert invalid inputs are rejected, then cancel/update the record and query the canceled ledger row.
+- Manual-runtime gates: explicitly mark real Qiqiao published gateway routing, browser login state, true `$.context` current user, and intranet-only base URLs as requiring a deployed runtime diagnostic report.
+
+Do not describe a local comprehensive diagnostic as proof that Qiqiao production is fully correct. State exactly which layers passed locally and which layers still require the page's deployed `诊断` report.
+
 ## Handoff checklist
 
 - Provide exact files or zip path.

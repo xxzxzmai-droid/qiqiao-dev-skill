@@ -42,6 +42,7 @@ description: Build, debug, test, and package Qiqiao/七巧/数智彩虹/道一�
 - No generated bundle uses code splitting unless every chunk is inlined or hosted from an approved stable URL.
 - All buttons and uploads are tested after Qiqiao-style injection, not only by opening `index.html` directly.
 - For fullstack custom pages, run a local runtime simulator when feasible: serve an injected page under a Qiqiao-like `/bpms-runtime/business/.../custompage/code/index.html` path and expose a local `/custompage/code/execute` endpoint that invokes the same `server-code.js`.
+- For production fullstack pages, prefer a comprehensive diagnostic gate over single-endpoint smoke tests: static checks, local execute bridge, backend `health/diagnose`, OpenAPI schema/query/write/cancel, conflict and invalid-input rejection, redaction, and explicit manual gates for real Qiqiao publish/login/`$.context`/intranet-only checks.
 - Backend calls degrade clearly in preview mode and report a useful diagnostic instead of throwing raw platform errors.
 - Frontend runtime bridge code must handle non-JSON/HTML responses from Qiqiao gateways. Do not blindly `JSON.parse(text)`; surface status, content-type, response snippet, and tried execute URL candidates in a copyable diagnostic report.
 - Custom pages with backend methods should expose at least `health` and `diagnose`; CRUD tools should also expose schema/query/create/update or cancel methods with no token/secret returned to the frontend.
