@@ -77,17 +77,27 @@
 
   function buildExecuteUrlCandidates(applicationId, businessId) {
     if (!applicationId || !businessId) return [];
-    var suffix = "/api/v1/runtime/business/" + applicationId + "/" + businessId + "/custompage/code/execute";
+    var runtimeSuffix = "/api/v1/runtime/business/" + applicationId + "/" + businessId + "/custompage/code/execute";
+    var bpmsRuntimeSuffix = "/api/v1/bpms-runtime/business/" + applicationId + "/" + businessId + "/custompage/code/execute";
     var candidates = [
-      location.origin + "/dev-runtime" + suffix,
-      location.origin + "/qiqiao/dev-runtime" + suffix,
-      location.origin + "/runtime" + suffix,
-      location.origin + "/qiqiao/runtime" + suffix
+      location.pathname.indexOf("/custompage/code/index.html") >= 0
+        ? location.origin + location.pathname.replace(/\/custompage\/code\/index\.html.*$/, "/custompage/code/execute")
+        : "",
+      location.origin + "/qiqiao/runtime" + bpmsRuntimeSuffix,
+      location.origin + "/qiqiao/dev-runtime" + bpmsRuntimeSuffix,
+      location.origin + "/runtime" + bpmsRuntimeSuffix,
+      location.origin + "/dev-runtime" + bpmsRuntimeSuffix,
+      location.origin + "/dev-runtime" + runtimeSuffix,
+      location.origin + "/qiqiao/dev-runtime" + runtimeSuffix,
+      location.origin + "/runtime" + runtimeSuffix,
+      location.origin + "/qiqiao/runtime" + runtimeSuffix
     ];
     var firstSegment = (location.pathname.match(/^\/([^/]+)/) || [])[1];
     if (firstSegment && ["dev-runtime", "runtime", "qiqiao"].indexOf(firstSegment) < 0) {
-      candidates.push(location.origin + "/" + firstSegment + "/dev-runtime" + suffix);
-      candidates.push(location.origin + "/" + firstSegment + "/runtime" + suffix);
+      candidates.push(location.origin + "/" + firstSegment + "/runtime" + bpmsRuntimeSuffix);
+      candidates.push(location.origin + "/" + firstSegment + "/dev-runtime" + bpmsRuntimeSuffix);
+      candidates.push(location.origin + "/" + firstSegment + "/dev-runtime" + runtimeSuffix);
+      candidates.push(location.origin + "/" + firstSegment + "/runtime" + runtimeSuffix);
     }
     return unique(candidates);
   }

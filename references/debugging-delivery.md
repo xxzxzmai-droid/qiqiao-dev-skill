@@ -39,6 +39,7 @@ Observed and expected from the docs:
    - The frontend parsed an HTML response as JSON. This usually means the execute endpoint path is wrong, the request hit a login/gateway/404 page, the server code is not published, or a reverse proxy changed the response.
    - Do not debug this from the visual page alone. Add guarded parsing and show/copy a diagnostic report with `status`, `content-type`, a short response snippet, `applicationId`, `businessId`, token presence, and every execute URL candidate tried.
    - Try the known execute prefixes: `/dev-runtime`, `/qiqiao/dev-runtime`, `/runtime`, `/qiqiao/runtime`, plus a candidate derived from the first segment of `location.pathname`.
+   - If the page URL is under `/bpms-runtime/business/.../custompage/code/index.html`, try the same path with `index.html` replaced by `execute` before the generic `/runtime/business/...` candidates.
    - Confirm the page parses `applicationId` and `businessId` from the runtime URL before falling back to configured constants. If constants are read first, path extraction may never be used.
 
 7. Page cannot read the current user:

@@ -69,7 +69,17 @@ Do not hardcode one execute prefix. Deployments may mount runtime APIs under dif
 /qiqiao/dev-runtime/api/v1/runtime/business/{applicationId}/{businessId}/custompage/code/execute
 /runtime/api/v1/runtime/business/{applicationId}/{businessId}/custompage/code/execute
 /qiqiao/runtime/api/v1/runtime/business/{applicationId}/{businessId}/custompage/code/execute
+/runtime/api/v1/bpms-runtime/business/{applicationId}/{businessId}/custompage/code/execute
+/qiqiao/runtime/api/v1/bpms-runtime/business/{applicationId}/{businessId}/custompage/code/execute
 ```
+
+If the current page URL contains `/custompage/code/index.html`, put the same-path replacement first:
+
+```text
+location.pathname.replace("/custompage/code/index.html", "/custompage/code/execute")
+```
+
+This matters on deployments where the page is served from `/qiqiao/runtime/api/v1/bpms-runtime/business/.../custompage/code/index.html`; using only `/api/v1/runtime/business/...` will miss the real execute endpoint.
 
 If `location.pathname` starts with another product prefix, also derive a prefixed candidate from that first segment.
 
