@@ -6,6 +6,7 @@ Official docs:
 - 七巧开发说明: https://qiqiao.do1.com.cn/help/develop_manual/%E4%B8%83%E5%B7%A7%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E.html
 - 自定义页面使用教程: https://qiqiao.do1.com.cn/help/develop_manual/%E8%87%AA%E5%AE%9A%E4%B9%89%E9%A1%B5%E9%9D%A2/%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.html
 - 页面 JS API: https://qiqiao.do1.com.cn/help/develop_manual/%E9%A1%B5%E9%9D%A2JS%E4%BA%8B%E4%BB%B6%E6%89%A9%E5%B1%95/JS-API.html
+- 低代码函数库: https://qiqiao.do1.com.cn/help/develop_manual/%E4%BD%8E%E4%BB%A3%E7%A0%81%E5%87%BD%E6%95%B0%E5%BA%93.html
 
 ## Server code shape
 
@@ -138,10 +139,44 @@ Limits of local simulation:
 
 Do not assume Qiqiao server-side HTTP client methods are lowercase `get`, `post`, and `put`. Some deployments expose uppercase names, Java-backed methods, or a generic `request`/`execute`/`send` method. Backend proxy code should:
 
+- Prefer the documented Java-backed signatures when `send*` methods exist:
+  - `$.httpclient.sendGet(uri, params, headers)`
+  - `$.httpclient.sendPost(uri, params, headers, body)`
+  - `$.httpclient.sendPut(uri, params, headers, body)`
+  - `$.httpclient.sendDel(uri, params, headers)`
+- For those documented `send*` methods, pass `params` and `headers` as `java.util.HashMap` in Qiqiao/Rhino, not ordinary JS objects and not `undefined`. A Rhino error like `Can't find method ... sendGet(org.mozilla.javascript.ConsString,object,org.mozilla.javascript.Undefined)` means the method exists but the argument types are wrong.
+- For GET token/API calls, pass a plain `uri` plus a params map. Do not rely only on a URL with query string when the active method is `sendGet(uri, params, headers)`.
 - Try lowercase, uppercase, and title-case method names for `GET`, `POST`, and `PUT`.
 - Try generic calls such as `request({ url, method, headers, body })`, `execute(...)`, `send(...)`, or `fetch(...)` when method-specific functions are absent.
 - Include `httpClientMethods` in `API.health()` / `API.diagnose()` using `Object.keys`, `for...in`, known method probes, and Java `getClass().getMethods()` when available.
 - Return a clear diagnostic such as `$.httpclient does not support GET; available methods: ...` instead of only saying the backend is unavailable.
+
+ES5 helper pattern:
+
+```js
+function toJavaMap(value) {
+  var map;
+  var key;
+  value = value || {};
+  try {
+    if (typeof Packages !== "undefined" && Packages.java && Packages.java.util && Packages.java.util.HashMap) {
+      map = new Packages.java.util.HashMap();
+      for (key in value) {
+        if (value.hasOwnProperty(key) && value[key] !== undefined && value[key] !== null) {
+          map.put(String(key), String(value[key]));
+        }
+      }
+      return map;
+    }
+  } catch (e) {}
+  return value;
+}
+
+// Qiqiao documented shape:
+var params = toJavaMap({ pageSize: 10 });
+var headers = toJavaMap({ Accept: "application/json", "X-Auth0-Token": token });
+var raw = $.httpclient.sendGet(baseUrl + "/open/example", params, headers);
+```
 
 ## Fullstack form CRUD server methods
 

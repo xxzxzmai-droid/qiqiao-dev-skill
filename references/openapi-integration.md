@@ -43,6 +43,8 @@ Content-Type: application/json
 X-Auth0-Token: <qiqiaoToken>
 ```
 
+When this flow runs inside Qiqiao server-side custom code through `$.httpclient.sendGet`, call it as `sendGet(uri, paramsMap, headersMap)` with Java `HashMap` params/headers. Do not pass ordinary JS objects or `undefined`; that fails in Rhino with a Java overload error even though `sendGet` is listed as available.
+
 Rules:
 - Cache the token during a test run; do not request it for every button click.
 - Do not print token values. Redact as first 6 + `***` + last 4 if a diagnostic needs proof.
@@ -223,6 +225,8 @@ Backend `diagnose()` should be non-destructive. It may check:
 - Current user resolution path.
 
 Backend `diagnose()` must not return token, access key, secret, raw CorpID/CropID, or admin account values.
+
+If diagnostics show `hasHttpClient: true` and methods such as `sendGet/sendPost/sendPut/sendDel`, but token/schema/query all fail with `Can't find method ... sendGet(org.mozilla.javascript.ConsString,object,org.mozilla.javascript.Undefined)`, fix the adapter argument types before changing base URLs or credentials. The correct first probe is a plain URI, params `HashMap`, and headers `HashMap`.
 
 ## Verified existing-form management surface
 
