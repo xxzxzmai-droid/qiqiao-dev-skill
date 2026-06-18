@@ -49,7 +49,7 @@ Rules:
 - Cache the token during a test run; do not request it for every button click.
 - Do not print token values. Redact as first 6 + `***` + last 4 if a diagnostic needs proof.
 - Respect the documented low-frequency limit. Prefer one `probe` run, then targeted calls.
-- Do not intentionally probe the exact production rate-limit threshold by "calling until it fails". That burns the same limit window real users need. Use conservative queue spacing and retry behavior instead.
+- Do not intentionally probe the exact production rate-limit threshold by "calling until it fails". That burns the same limit window real users need. Use a write queue with fast-first behavior, short spacing only between queued writes, and retry/backoff only after a real rate-limit response.
 - When calling the public `https://e.csg.cn/...` base from local scripts, use the reference script's browser-like `User-Agent` and `Accept` headers. A bare HTTP client may receive a `403` HTML gateway response even when credentials are correct.
 
 If a deployed report first shows token/schema/query success and later fails with `access_key 失败：超出请求频率限制`, treat the OpenAPI path as connected but over-called. Reduce calls before changing credentials or base URLs:
@@ -61,7 +61,7 @@ If a deployed report first shows token/schema/query success and later fails with
 - On submit, let backend `createReservation` perform the final conflict query and create in one method. Frontend should use its loaded records for immediate UX feedback, not as an extra pre-submit OpenAPI call.
 - After create/cancel succeeds, update the visible schedule from the returned backend record first. Do not immediately call `queryReservations` again unless the user manually asks for read-back verification.
 - Add cooldowns to manual refresh and diagnostic actions. A useful starting point is 15 seconds for refresh and 30 seconds for diagnostics, with a clear UI message instead of repeated backend calls.
-- In formal pages, route create/cancel through a single frontend write queue. Persist the last backend-call timestamp in local storage so reloads do not immediately burst token calls again. For strict deployments, start with at least 60 seconds between write calls and retry rate-limit failures with a longer delay.
+- In formal pages, route create/cancel through a single frontend write queue. Do not persist read/bootstrap call timestamps or apply a fixed post-bootstrap cooldown to the first user submit; that makes the page look stuck after initial data load. Try the first write immediately, add only a short spacing between consecutive queued writes, and retry rate-limit failures with increasing delays.
 - If cancellation hits a rate limit, keep the record visually marked as "cancel syncing" and retry in the background. Do not claim the slot is fully released until the backend status update succeeds.
 - After a rate-limit report, wait for the platform window to cool down before rerunning destructive or repeated diagnostics.
 
@@ -137,6 +137,8 @@ For reservation-style tools, prefer a status field over destructive cancellation
 ```
 
 Then cancel by `PUT /open/applications/{applicationId}/forms/{formModelId}` with the current record `version` and only the status variable set to the canceled option value, such as `"2"`. Treat canceled records as ledger/history rows and exclude them from availability conflict checks.
+
+For half-hour booking tools, make one free slot immediately submit-ready. The first click should select `start=slot.start` and `end=slot.end`; a second click on a later free slot can extend `end` to that slot's end time. Do not require two different clicks for a 30-minute booking.
 
 ## Capability boundaries
 

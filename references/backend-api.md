@@ -221,7 +221,9 @@ When `queryReservations`, `createReservation`, or `cancelReservation` are called
 
 Do not split one business submit into multiple frontend server calls for each person field. For reservation-style pages, let `createReservation(payload)` resolve the reserver and write in one backend invocation. Free-text fields such as attendee names, departments, or phone numbers should be written as text and must not be resolved through `$.contact` or `/open/users/account`.
 
-For strict-rate deployments, put create/cancel behind a frontend queue rather than letting each click call `REST.API.*` immediately. Persist the last call timestamp across reloads, serialize writes, and convert rate-limit failures into delayed retries. Cancellation should show a pending-sync state until the backend status update succeeds.
+For strict-rate deployments, put create/cancel behind a frontend queue rather than letting repeated clicks call `REST.API.*` concurrently. Keep the queue fast-first: the first user write should run immediately even if bootstrap/read calls just happened; only consecutive queued writes need short spacing, and only real rate-limit failures should trigger delayed retries. Cancellation should show a pending-sync state until the backend status update succeeds.
+
+For reservation grids with half-hour slots, selecting one free slot should produce a valid half-hour booking immediately. Let users extend the booking by clicking a later free slot, and block later candidates that would cross an occupied slot.
 
 For user-facing diagnostics, format timestamps in the business timezone, usually `Asia/Shanghai +08:00`, instead of raw UTC `toISOString()` values. Keep epoch millisecond timestamps for token signing and IDs unchanged.
 
