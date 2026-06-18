@@ -191,6 +191,7 @@ var API = {
   queryReservations: function (params) { /* read form records */ },
   resolveUser: function () { /* runtime current user or configured-account fallback */ },
   createReservation: function (payload) { /* validate conflicts, then create */ },
+  updateReservation: function (payload) { /* versioned update for safe business fields */ },
   cancelReservation: function (payload) { /* status update, not destructive delete */ }
 };
 ```
@@ -224,6 +225,12 @@ Do not split one business submit into multiple frontend server calls for each pe
 For strict-rate deployments, put create/cancel behind a frontend queue rather than letting repeated clicks call `REST.API.*` concurrently. Keep the queue fast-first: the first user write should run immediately even if bootstrap/read calls just happened; only consecutive queued writes need short spacing, and only real rate-limit failures should trigger delayed retries. Cancellation should show a pending-sync state until the backend status update succeeds.
 
 For reservation grids with half-hour slots, selecting one free slot should produce a valid half-hour booking immediately. Let users extend the booking by clicking a later free slot, and block later candidates that would cross an occupied slot.
+
+For mobile-first reservation pages, model the frontend as explicit screens instead of a crowded all-in-one page: room list, schedule/time selection, info form, confirmation, and my reservations. The backend should mirror that workflow with create/update/cancel methods that return enough record data for local UI updates.
+
+Use `updateReservation(payload)` for safe edits such as purpose, reserver, and free-text attendees, with `id` and current `version` passed into `PUT /open/applications/{applicationId}/forms/{formModelId}`. Do not silently edit room/date/start/end through this lightweight path; changing availability fields needs the same overlap validation as a new booking, so prefer cancel-and-create unless the update method explicitly rechecks conflicts.
+
+Required fields such as purpose must be checked in both places: prevent advancing from the info step to confirmation in the frontend, and reject the same payload in `server-code.js`. This protects direct backend calls and stale custom-page runtimes.
 
 For user-facing diagnostics, format timestamps in the business timezone, usually `Asia/Shanghai +08:00`, instead of raw UTC `toISOString()` values. Keep epoch millisecond timestamps for token signing and IDs unchanged.
 

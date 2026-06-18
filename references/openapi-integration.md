@@ -63,6 +63,7 @@ If a deployed report first shows token/schema/query success and later fails with
 - Add cooldowns to manual refresh and diagnostic actions. A useful starting point is 15 seconds for refresh and 30 seconds for diagnostics, with a clear UI message instead of repeated backend calls.
 - In formal pages, route create/cancel through a single frontend write queue. Do not persist read/bootstrap call timestamps or apply a fixed post-bootstrap cooldown to the first user submit; that makes the page look stuck after initial data load. Try the first write immediately, add only a short spacing between consecutive queued writes, and retry rate-limit failures with increasing delays.
 - If cancellation hits a rate limit, keep the record visually marked as "cancel syncing" and retry in the background. Do not claim the slot is fully released until the backend status update succeeds.
+- In mobile booking pages, split the interaction into separate screens: choose room, choose time, fill required info, confirm, then return to the updated schedule or my reservations. This reduces accidental writes and keeps the write queue focused on final submit/cancel/update actions.
 - After a rate-limit report, wait for the platform window to cool down before rerunning destructive or repeated diagnostics.
 
 ## Form data OpenAPI
@@ -139,6 +140,8 @@ For reservation-style tools, prefer a status field over destructive cancellation
 Then cancel by `PUT /open/applications/{applicationId}/forms/{formModelId}` with the current record `version` and only the status variable set to the canceled option value, such as `"2"`. Treat canceled records as ledger/history rows and exclude them from availability conflict checks.
 
 For half-hour booking tools, make one free slot immediately submit-ready. The first click should select `start=slot.start` and `end=slot.end`; a second click on a later free slot can extend `end` to that slot's end time. Do not require two different clicks for a 30-minute booking.
+
+For editable "my reservations" lists, update only safe business fields such as purpose, reserver, and free-text attendees through a versioned `PUT`. Keep purpose required in both frontend and backend. If the user wants to change room/date/start/end, either cancel the old record and create a new one, or implement a dedicated update path that reuses the same overlap checks as `createReservation`.
 
 ## Capability boundaries
 
@@ -231,6 +234,7 @@ Recommended flow:
 - Frontend loads current room/date/state and asks `API.queryReservations(params)` for records.
 - Frontend asks `API.resolveUser()` to prefill the reserver. If runtime user lookup fails, the backend may use a configured-account fallback only when the diagnostic response marks that source clearly.
 - Frontend posts a normalized payload to `API.createReservation(payload)`.
+- Frontend posts safe edits from "my reservations" to `API.updateReservation(payload)` with record `id`, current `version`, and editable business fields only.
 - Backend resolves only fields that actually require user IDs, then validates required fields, room, date, half-hour start/end boundaries, status values, and overlap conflicts before calling OpenAPI create.
 - Backend cancels by updating the status field rather than deleting rows, unless the business explicitly wants destructive deletes.
 - Frontend can update the schedule from the returned create/cancel result immediately. On strict-rate deployments, make read-back refresh manual or cooled down instead of automatic.
