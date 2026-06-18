@@ -117,6 +117,23 @@ function parseServerResponse(text, response) {
 
 For production CRUD custom pages, include a visible diagnostics action that runs `API.health()` and `API.diagnose()` and copies a JSON report containing environment, current page IDs, selected business inputs, execute URL candidates, recent frontend errors, recent backend errors, and backend probe results. Redact tokens, secrets, access keys, CorpID/CropID, and accounts.
 
+## Local runtime simulator
+
+For fullstack pages, static local preview is not enough. A useful local simulator should:
+
+- Serve the page under a Qiqiao-like path such as `/qiqiao/runtime/api/v1/bpms-runtime/business/local-app/local-business/custompage/code/index.html`.
+- Inject `index.css` and `index.js` for local browser testing, because Qiqiao injects those files but a plain browser does not.
+- Expose `POST .../custompage/code/execute` and dispatch `REST.API.methodName(...)` to the same `server-code.js`.
+- Mock the Qiqiao `$` object minimally: `$.log`, `$.context`, and `$.httpclient`.
+- Let `$.httpclient` call the real OpenAPI when the task is to verify form CRUD, while keeping secrets in local/server-side code only.
+- Produce a smoke report for `health`, `diagnose`, `schema`, query, user resolution, create, and cancel/update paths.
+
+Do not force every `localhost` page into preview mode. If the path matches `/bpms-runtime/business/.../custompage/code/`, treat it as a simulated runtime path so the frontend calls the local execute endpoint.
+
+Limits of local simulation:
+- It can prove frontend bridge code, server-code method dispatch, OpenAPI token/schema/query/create/update behavior, and conflict checks.
+- It cannot prove the real Qiqiao gateway prefix, published-version routing, browser login state, `X-Auth0-Token`, or real `$.context` current-user behavior. Those still need runtime deployment diagnostics.
+
 ## Fullstack form CRUD server methods
 
 For protected form writes, prefer this method surface in `server-code.js`:

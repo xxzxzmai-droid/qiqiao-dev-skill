@@ -63,11 +63,14 @@ python3 scripts/make_injection_harness.py /path/to/qiqiao-folder /tmp/qiqiao-har
 
 Open the harness to verify basic rendering and event binding. Do not upload the harness as the Qiqiao three-file version.
 
+For fullstack pages with `server-code.js`, prefer a local runtime simulator over a static harness. The simulator should serve a Qiqiao-like `/bpms-runtime/business/.../custompage/code/index.html` URL and a local `/custompage/code/execute` endpoint. Passing this local runtime smoke test means the app code, execute bridge, server API methods, and OpenAPI CRUD can work together; it does not prove Qiqiao's real gateway path, login token, published-version routing, or `$.context` user data.
+
 ## Handoff checklist
 
 - Provide exact files or zip path.
 - State whether it is three-file injection mode or single-file fallback.
 - Include whether backend code is required.
+- Include whether local runtime simulation passed, and separately whether Qiqiao runtime diagnostics passed.
 - Include whether the frontend has a copyable diagnostics panel and whether `API.health()` / `API.diagnose()` passed.
 - Include expected Qiqiao test path: preview for frontend, debug for server breakpoints/logs, publish for runtime user testing.
 - Ask the user to paste the self-check JSON report if Qiqiao behavior differs from local simulation.
