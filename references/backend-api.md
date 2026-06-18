@@ -188,11 +188,11 @@ var API = {
   bootstrap: function () { /* current user + schema fields + first query in one call */ },
   diagnose: function () { /* token/schema/query/user probes only; no create */ },
   schema: function () { /* form model/component summary */ },
-  queryReservations: function (params) { /* read form records */ },
+  queryRecords: function (params) { /* read form records */ },
   resolveUser: function () { /* runtime current user or configured-account fallback */ },
-  createReservation: function (payload) { /* validate conflicts, then create */ },
-  updateReservation: function (payload) { /* versioned update for safe business fields */ },
-  cancelReservation: function (payload) { /* status update, not destructive delete */ }
+  createRecord: function (payload) { /* validate business rules, then create */ },
+  updateRecord: function (payload) { /* versioned update for safe fields */ },
+  changeRecordStatus: function (payload) { /* status update, not destructive delete */ }
 };
 ```
 
@@ -214,23 +214,23 @@ For user lookup, prefer Qiqiao's contact library before OpenAPI when available:
 var user = $.contact.getUserByUserAccount(account);
 ```
 
-This avoids spending OpenAPI token requests on reserver/attendee parsing. If contact lookup is unavailable, fall back to `/open/users/account` and make the diagnostic source explicit.
+This avoids spending OpenAPI token requests on owner/participant parsing. If contact lookup is unavailable, fall back to `/open/users/account` and make the diagnostic source explicit.
 
-For pages that load data immediately, expose a `bootstrap` method and have the frontend call it once on init. Returning user, field mapping, and first-page records together prevents a startup burst of `currentUser` + `schema` + `queryReservations` execute calls, which can trigger `access_key` frequency limits on deployments with strict token throttling.
+For pages that load data immediately, expose a `bootstrap` method and have the frontend call it once on init. Returning user, field mapping, and first-page records together prevents a startup burst of `currentUser` + `schema` + `queryRecords` execute calls, which can trigger `access_key` frequency limits on deployments with strict token throttling.
 
-When `queryReservations`, `createReservation`, or `cancelReservation` are called after bootstrap, let the frontend pass the effective field map back to the backend so those methods do not have to fetch the form model/schema every time. On create/cancel success, return enough record data for the frontend to update the local schedule immediately; avoid an automatic post-submit refresh on deployments that rate-limit `access_key`.
+When query/create/update/status methods are called after bootstrap, let the frontend pass the effective field map back to the backend so those methods do not have to fetch the form model/schema every time. On write success, return enough record data for the frontend to update local state immediately; avoid an automatic post-submit refresh on deployments that rate-limit `access_key`.
 
-Do not split one business submit into multiple frontend server calls for each person field. For reservation-style pages, let `createReservation(payload)` resolve the reserver and write in one backend invocation. Free-text fields such as attendee names, departments, or phone numbers should be written as text and must not be resolved through `$.contact` or `/open/users/account`.
+Do not split one business submit into multiple frontend server calls for each person field. Let the create method resolve only fields that actually require platform user IDs and write in one backend invocation. Free-text fields such as participant names, departments, or phone numbers should be written as text and must not be resolved through `$.contact` or `/open/users/account`.
 
 For strict-rate deployments, put create/cancel behind a frontend queue rather than letting repeated clicks call `REST.API.*` concurrently. Keep the queue fast-first: the first user write should run immediately even if bootstrap/read calls just happened; only consecutive queued writes need short spacing, and only real rate-limit failures should trigger delayed retries. Cancellation should show a pending-sync state until the backend status update succeeds.
 
-For reservation grids with half-hour slots, selecting one free slot should produce a valid half-hour booking immediately. Let users extend the booking by clicking a later free slot, and block later candidates that would cross an occupied slot.
+For time-slot or resource-occupancy grids, selecting one free slot should produce the smallest valid range immediately. Let users extend the range by clicking a later compatible slot, and block candidates that would cross an occupied or invalid slot.
 
-For mobile-first reservation pages, model the frontend as explicit screens instead of a crowded all-in-one page: room list, schedule/time selection, info form, confirmation, and my reservations. The backend should mirror that workflow with create/update/cancel methods that return enough record data for local UI updates.
+For mobile-first business pages, model the frontend as explicit screens instead of a crowded all-in-one page: object selection, detail or availability view, input form, confirmation, and personal/history records. The backend should mirror that workflow with create/update/status methods that return enough record data for local UI updates.
 
-Use `updateReservation(payload)` for safe edits such as purpose, reserver, and free-text attendees, with `id` and current `version` passed into `PUT /open/applications/{applicationId}/forms/{formModelId}`. Do not silently edit room/date/start/end through this lightweight path; changing availability fields needs the same overlap validation as a new booking, so prefer cancel-and-create unless the update method explicitly rechecks conflicts.
+Use versioned update methods for safe edits, with `id` and current `version` passed into `PUT /open/applications/{applicationId}/forms/{formModelId}`. Do not silently edit fields that define uniqueness, availability, permissions, or workflow routing unless the update method explicitly revalidates those constraints.
 
-Required fields such as purpose must be checked in both places: prevent advancing from the info step to confirmation in the frontend, and reject the same payload in `server-code.js`. This protects direct backend calls and stale custom-page runtimes.
+Required fields must be checked in both places: prevent advancing from the input step to confirmation in the frontend, and reject the same payload in `server-code.js`. This protects direct backend calls and stale custom-page runtimes.
 
 For user-facing diagnostics, format timestamps in the business timezone, usually `Asia/Shanghai +08:00`, instead of raw UTC `toISOString()` values. Keep epoch millisecond timestamps for token signing and IDs unchanged.
 

@@ -54,16 +54,16 @@ Rules:
 
 If a deployed report first shows token/schema/query success and later fails with `access_key 失败：超出请求频率限制`, treat the OpenAPI path as connected but over-called. Reduce calls before changing credentials or base URLs:
 
-- Combine first-page initialization into one backend method such as `API.bootstrap()` that returns current user, schema fields, and the first reservation query in one execute call.
-- Avoid separate `schema` then `queryReservations` calls on every refresh; have `queryReservations` return the effective field map when needed.
+- Combine first-page initialization into one backend method such as `API.bootstrap()` that returns current user, schema fields, and the first data query in one execute call.
+- Avoid separate `schema` then query calls on every refresh; have query methods return the effective field map when needed.
 - After bootstrap, pass the effective field map into later CRUD backend calls so they do not re-fetch `/form_models/{id}` on every query/create/cancel.
-- Do not call `/open/users/account` for every reserver or attendee if Qiqiao server-side contact functions are available. Prefer `$.contact.getUserByUserAccount(account)` and fall back to OpenAPI only when contact lookup is unavailable.
-- On submit, let backend `createReservation` perform the final conflict query and create in one method. Frontend should use its loaded records for immediate UX feedback, not as an extra pre-submit OpenAPI call.
-- After create/cancel succeeds, update the visible schedule from the returned backend record first. Do not immediately call `queryReservations` again unless the user manually asks for read-back verification.
+- Do not call `/open/users/account` for every owner or participant if Qiqiao server-side contact functions are available. Prefer `$.contact.getUserByUserAccount(account)` and fall back to OpenAPI only when contact lookup is unavailable.
+- On submit, let the backend create method perform final business-rule checks and create in one method. Frontend should use its loaded records for immediate UX feedback, not as an extra pre-submit OpenAPI call.
+- After create/cancel succeeds, update the visible list or status view from the returned backend record first. Do not immediately call the query method again unless the user manually asks for read-back verification.
 - Add cooldowns to manual refresh and diagnostic actions. A useful starting point is 15 seconds for refresh and 30 seconds for diagnostics, with a clear UI message instead of repeated backend calls.
 - In formal pages, route create/cancel through a single frontend write queue. Do not persist read/bootstrap call timestamps or apply a fixed post-bootstrap cooldown to the first user submit; that makes the page look stuck after initial data load. Try the first write immediately, add only a short spacing between consecutive queued writes, and retry rate-limit failures with increasing delays.
 - If cancellation hits a rate limit, keep the record visually marked as "cancel syncing" and retry in the background. Do not claim the slot is fully released until the backend status update succeeds.
-- In mobile booking pages, split the interaction into separate screens: choose room, choose time, fill required info, confirm, then return to the updated schedule or my reservations. This reduces accidental writes and keeps the write queue focused on final submit/cancel/update actions.
+- In mobile business pages, split the interaction into separate screens: choose object or scope, review details or availability, fill required info, confirm, then return to the updated list or personal records. This reduces accidental writes and keeps the write queue focused on final submit/cancel/update actions.
 - After a rate-limit report, wait for the platform window to cool down before rerunning destructive or repeated diagnostics.
 
 ## Form data OpenAPI
@@ -121,27 +121,27 @@ For the single-record `PUT /forms/{formModelId}` path, pass the current version 
 
 Use exact form component names and value shapes from `GET /form_models/{formModelId}` before writing filters or payloads. Dates commonly need timestamps; option fields may need stored option values or indexes, not display text.
 
-If a field changes type, update the write payload shape and tests immediately. For example, when `参会人` changes from `multiUserSelect` to `textarea`, write a string such as `"张三\n李四"` rather than a user ID array, and stop resolving each attendee through contact/OpenAPI. Keep only the reserver/approver fields as user IDs when the form field type requires it.
+If a field changes type, update the write payload shape and tests immediately. For example, when a participant-like field changes from `multiUserSelect` to `textarea`, write a plain string such as `"张三\n李四"` rather than a user ID array, and stop resolving that field through contact/OpenAPI. Keep only fields whose form type requires user IDs as resolved platform users.
 
-For reservation-style tools, prefer a status field over destructive cancellation when business audit history matters. The tested meeting-room pattern writes:
+For resource-occupancy or approval-style tools, prefer a status field over destructive cancellation when business audit history matters. A typical record payload writes:
 
 ```json
 {
-  "会议室字段": "会商室",
-  "预约日期字段": 1781625600000,
-  "预约开始时间字段": "10:30",
-  "预约结束时间字段": "11:00",
-  "预约状态字段": "1",
-  "预约用途字段": "用途",
-  "预约人字段": "user-id"
+  "资源字段": "资源A",
+  "日期字段": 1781625600000,
+  "开始时间字段": "10:30",
+  "结束时间字段": "11:00",
+  "状态字段": "1",
+  "说明字段": "业务说明",
+  "负责人字段": "user-id"
 }
 ```
 
 Then cancel by `PUT /open/applications/{applicationId}/forms/{formModelId}` with the current record `version` and only the status variable set to the canceled option value, such as `"2"`. Treat canceled records as ledger/history rows and exclude them from availability conflict checks.
 
-For half-hour booking tools, make one free slot immediately submit-ready. The first click should select `start=slot.start` and `end=slot.end`; a second click on a later free slot can extend `end` to that slot's end time. Do not require two different clicks for a 30-minute booking.
+For time-slot tools, make one free slot immediately submit-ready at the smallest valid duration. The first click should select `start=slot.start` and `end=slot.end`; a second click on a later compatible slot can extend `end` to that slot's end time. Do not require two different clicks for the smallest valid duration.
 
-For editable "my reservations" lists, update only safe business fields such as purpose, reserver, and free-text attendees through a versioned `PUT`. Keep purpose required in both frontend and backend. If the user wants to change room/date/start/end, either cancel the old record and create a new one, or implement a dedicated update path that reuses the same overlap checks as `createReservation`.
+For editable personal-record lists, update only safe business fields through a versioned `PUT`. Keep required fields validated in both frontend and backend. If the user wants to change fields that define availability, identity, permissions, or workflow routing, either use a cancel-and-create flow or implement a dedicated update path that reuses the same server-side validation as create.
 
 ## Capability boundaries
 
@@ -231,13 +231,13 @@ Run `scripts/check_qiqiao_page.py assets/openapi-crud-custom-page` before delive
 When the page must write real form data and needs CorpID/Secret/account credentials, do not put those values in `index.html`, `index.css`, or `index.js`. Put private credentials only in Qiqiao server-side code/config or a private local config used by test tools. The frontend should call server `API` methods through the custom page execute bridge.
 
 Recommended flow:
-- Frontend loads current room/date/state and asks `API.queryReservations(params)` for records.
-- Frontend asks `API.resolveUser()` to prefill the reserver. If runtime user lookup fails, the backend may use a configured-account fallback only when the diagnostic response marks that source clearly.
-- Frontend posts a normalized payload to `API.createReservation(payload)`.
-- Frontend posts safe edits from "my reservations" to `API.updateReservation(payload)` with record `id`, current `version`, and editable business fields only.
-- Backend resolves only fields that actually require user IDs, then validates required fields, room, date, half-hour start/end boundaries, status values, and overlap conflicts before calling OpenAPI create.
+- Frontend loads current scope/state and asks a backend query method for records.
+- Frontend asks `API.resolveUser()` to prefill the current user. If runtime user lookup fails, the backend may use a configured-account fallback only when the diagnostic response marks that source clearly.
+- Frontend posts a normalized payload to a backend create method.
+- Frontend posts safe edits to a backend update method with record `id`, current `version`, and editable business fields only.
+- Backend resolves only fields that actually require user IDs, then validates required fields, boundary values, status values, and domain constraints before calling OpenAPI create.
 - Backend cancels by updating the status field rather than deleting rows, unless the business explicitly wants destructive deletes.
-- Frontend can update the schedule from the returned create/cancel result immediately. On strict-rate deployments, make read-back refresh manual or cooled down instead of automatic.
+- Frontend can update the visible list or status view from the returned create/cancel result immediately. On strict-rate deployments, make read-back refresh manual or cooled down instead of automatic.
 
 Backend `diagnose()` should be non-destructive. It may check:
 - Qiqiao HTTP client availability.
