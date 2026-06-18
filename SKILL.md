@@ -1,6 +1,6 @@
 ---
 name: qiqiao-dev
-description: Build, debug, and package Qiqiao/七巧/道一云低代码 custom pages, injected index.html/index.css/index.js frontends, server-side custom function code, REST.API/applyApi bridges, page JS event extensions, custom form/page components, form/table/OpenAPI integrations, and self-hosted API calls. Use when working on 七巧 IDE, 自定义页面, 服务端代码, 页面JS事件扩展, 表单表格高级 API, custompage code, preview/debug/runtime issues, or Qiqiao delivery packages.
+description: Build, debug, test, and package Qiqiao/七巧/数智彩虹/道一云低代码 custom pages, injected index.html/index.css/index.js frontends, server-side custom function code, REST.API/applyApi bridges, page JS event extensions, custom form/page components, form/table/OpenAPI integrations, UOS/Linux OpenAPI test tools, and self-hosted API calls. Use when working on 七巧 IDE, 数智彩虹, 自定义页面, 服务端代码, 页面JS事件扩展, 表单表格高级 API, custompage code, OpenAPI token/form CRUD, preview/debug/runtime issues, or Qiqiao delivery packages.
 ---
 
 # Qiqiao Dev
@@ -13,7 +13,11 @@ description: Build, debug, and package Qiqiao/七巧/道一云低代码 custom p
 - Initialize JavaScript idempotently on `DOMContentLoaded` or immediately when the DOM is ready.
 - Write server code as `var API = { method: function (...) { ... } }`; keep helpers outside API, return JSON-safe plain data, and log through Qiqiao logging APIs when available.
 - Keep secrets out of frontend files. Prefer a server-side proxy or approved gateway for self-hosted server APIs unless the endpoint is public, CORS-ready, and needs no secret.
+- For production custom pages that write protected form data, default to a fullstack pattern: frontend `index.js` calls Qiqiao server `API` methods, and `server-code.js` handles OpenAPI token, form CRUD, conflict checks, and diagnostics.
 - Distinguish modes: preview renders frontend only, debug uses Qiqiao debugger/socket behavior, runtime calls the execute endpoint with application/business IDs and token when available.
+- Treat 数智彩虹 as the user's intranet deployment of Qiqiao. Use the same Qiqiao rules, but expect intranet base URLs, private credentials, and proxy/NO_PROXY issues.
+- Never paste `CorpID`/`Secret`/admin account/token values into final answers, frontend code, public skill files, screenshots, or logs. Use private config files, environment variables, or local-only `qqkf.txt` parsing.
+- Do not claim OpenAPI can create or design form models unless the target deployment exposes and verifies a form-design management endpoint. The documented OpenAPI surface covers form data CRUD, form model/component lookup, files, workflow, users/departments, and workflow design definitions.
 
 ## Workflow
 
@@ -21,11 +25,16 @@ description: Build, debug, and package Qiqiao/七巧/道一云低代码 custom p
    - Custom page / 三文件 IDE delivery: read `references/custom-page.md`.
    - Server API, `applyApi`, REST bridge, or self-hosted API: read `references/backend-api.md`.
    - 页面JS事件扩展, 表单, 表格, custom components, or OpenAPI: read `references/forms-tables.md`.
+   - 数智彩虹/OpenAPI token, intranet credentials, form CRUD, UOS Go test executable, or CRUD test page: read `references/openapi-integration.md`.
    - Loading failures, self-check reports, preview/debug/runtime issues, or final handoff: read `references/debugging-delivery.md`.
-2. Start from `assets/custom-page-injection/` for a known-good injected frontend plus `server-code.js` test surface.
+2. Pick the nearest starting asset:
+   - Use `assets/custom-page-injection/` for a known-good injected frontend plus `server-code.js` test surface.
+   - Use `assets/openapi-crud-custom-page/` for a Qiqiao-deployed form CRUD test page that uses the runtime token and stores no durable secret.
+   - Use `assets/openapi-go-tool/` for a local/UOS Linux executable that reads private config or `qqkf.txt`, probes OpenAPI, serves a local CRUD test web UI, and never embeds credentials.
 3. Run `scripts/check_qiqiao_page.py <folder>` before delivery.
 4. When local visual testing is needed, run `scripts/make_injection_harness.py <folder> <out.html>` and open the generated harness. Do not paste the harness into Qiqiao; paste the original three files.
-5. Deliver `index.html`, `index.css`, `index.js`, optional `server-code.js`, and concise paste/upload instructions. Include a single-file fallback only when Qiqiao injection is unavailable or the user asks for it.
+5. For UOS/OpenAPI tools, run `go test ./...`, cross-compile with `GOOS=linux GOARCH=amd64`, and provide the executable path plus the exact command using a private config path.
+6. Deliver `index.html`, `index.css`, `index.js`, optional `server-code.js`, generated executable paths, and concise paste/run instructions. Include a single-file fallback only when Qiqiao injection is unavailable or the user asks for it.
 
 ## Implementation Checklist
 
@@ -33,5 +42,9 @@ description: Build, debug, and package Qiqiao/七巧/道一云低代码 custom p
 - No generated bundle uses code splitting unless every chunk is inlined or hosted from an approved stable URL.
 - All buttons and uploads are tested after Qiqiao-style injection, not only by opening `index.html` directly.
 - Backend calls degrade clearly in preview mode and report a useful diagnostic instead of throwing raw platform errors.
+- Frontend runtime bridge code must handle non-JSON/HTML responses from Qiqiao gateways. Do not blindly `JSON.parse(text)`; surface status, content-type, response snippet, and tried execute URL candidates in a copyable diagnostic report.
+- Custom pages with backend methods should expose at least `health` and `diagnose`; CRUD tools should also expose schema/query/create/update or cancel methods with no token/secret returned to the frontend.
 - If using page JS event extensions, exported function names are unique and the code uses `this.utils`, `this.business`, and `this.context` patterns instead of custom-page globals.
 - If using OpenAPI or external APIs, confirm the token, app IDs, model IDs, CORS, and secret-handling path before implementation.
+- For intranet OpenAPI calls to `10.*`, check proxy environment first. A 502 from `127.0.0.1` usually means the local proxy intercepted an intranet URL; retry with direct/no-proxy before changing API code.
+- Respect Qiqiao OpenAPI rate limits; cache token results, avoid repeated destructive smoke tests, and prefer schema/probe reads before create/update/delete.

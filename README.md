@@ -9,6 +9,8 @@ It helps build, debug, and package:
 - `REST.API` / `applyApi` bridges
 - page JS event extensions
 - form/table/OpenAPI integration patterns
+- 数智彩虹 intranet OpenAPI token and form CRUD test tooling
+- Linux/UOS OpenAPI probe and local CRUD web server executable source
 - self-hosted API integration guidance
 
 ## Install
@@ -41,6 +43,8 @@ or:
 - `SKILL.md`: main skill instructions and trigger description
 - `references/`: Qiqiao custom page, backend API, form/table, and delivery notes
 - `assets/custom-page-injection/`: injected custom page template with frontend/backend diagnostics
+- `assets/openapi-crud-custom-page/`: Qiqiao-deployed form CRUD test page with no durable frontend secret
+- `assets/openapi-go-tool/`: Go source for UOS/Linux OpenAPI probe and local CRUD test web UI
 - `scripts/check_qiqiao_page.py`: validates Qiqiao three-file delivery rules
 - `scripts/make_injection_harness.py`: creates a local preview harness by injecting CSS/JS
 
@@ -48,7 +52,23 @@ or:
 
 ```bash
 python3 scripts/check_qiqiao_page.py assets/custom-page-injection
+python3 scripts/check_qiqiao_page.py assets/openapi-crud-custom-page
 python3 scripts/make_injection_harness.py assets/custom-page-injection /tmp/qiqiao-harness.html
+cd assets/openapi-go-tool && go test ./...
 ```
 
 The generated harness is only for local browser testing. In Qiqiao IDE, paste/upload the original `index.html`, `index.css`, `index.js`, and optional server code separately.
+
+Build the UOS test executable from `assets/openapi-go-tool`:
+
+```bash
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o qiqiao-openapi-tool-uos-amd64 .
+```
+
+Default OpenAPI base URL is `https://e.csg.cn/qiqiao/runtime/api/v1/bpms-integration`. Use `--insecure-skip-verify` only when the local certificate chain is unavailable.
+
+Run a broader test against an existing test form:
+
+```bash
+./qiqiao-openapi-tool-uos-amd64 --config /path/to/qiqiao-config.local.json --mode full-smoke --page-size 5 --delete-after=true
+```

@@ -35,6 +35,17 @@ Observed and expected from the docs:
    - Check `applicationId`, `businessId`, token, execute URL, published version, and server-code syntax.
    - Add a small `API.health()` first, then test business methods.
 
+6. Browser shows `Unexpected token '<', "<html> <h"... is not valid JSON`:
+   - The frontend parsed an HTML response as JSON. This usually means the execute endpoint path is wrong, the request hit a login/gateway/404 page, the server code is not published, or a reverse proxy changed the response.
+   - Do not debug this from the visual page alone. Add guarded parsing and show/copy a diagnostic report with `status`, `content-type`, a short response snippet, `applicationId`, `businessId`, token presence, and every execute URL candidate tried.
+   - Try the known execute prefixes: `/dev-runtime`, `/qiqiao/dev-runtime`, `/runtime`, `/qiqiao/runtime`, plus a candidate derived from the first segment of `location.pathname`.
+   - Confirm the page parses `applicationId` and `businessId` from the runtime URL before falling back to configured constants. If constants are read first, path extraction may never be used.
+
+7. Page cannot read the current user:
+   - First verify which runtime user APIs exist in `$.context` or the page context for the current deployment.
+   - If the user API is unavailable, let backend diagnostics report the failure and optionally resolve the configured backend account for testing.
+   - Surface the user source in the UI/diagnostic report, for example `context`, `url`, `configured-account-fallback`, or `unresolved`.
+
 ## Validation
 
 Run:
@@ -56,5 +67,6 @@ Open the harness to verify basic rendering and event binding. Do not upload the 
 - Provide exact files or zip path.
 - State whether it is three-file injection mode or single-file fallback.
 - Include whether backend code is required.
+- Include whether the frontend has a copyable diagnostics panel and whether `API.health()` / `API.diagnose()` passed.
 - Include expected Qiqiao test path: preview for frontend, debug for server breakpoints/logs, publish for runtime user testing.
 - Ask the user to paste the self-check JSON report if Qiqiao behavior differs from local simulation.

@@ -1,6 +1,6 @@
 # Forms, Tables, Page JS, and OpenAPI Reference
 
-Use this for 页面JS事件扩展, 表单字段联动, 表格/表单高级 API, custom components, OpenAPI, and integrations outside the custom page IDE.
+Use this for 页面JS事件扩展, 表单字段联动, 表格/表单高级 API, custom components, OpenAPI, and integrations outside the custom page IDE. For 数智彩虹 intranet token flows, UOS test binaries, and form data CRUD tooling, also read `openapi-integration.md`.
 
 Official docs:
 - 页面 JS API: https://qiqiao.do1.com.cn/help/develop_manual/%E9%A1%B5%E9%9D%A2JS%E4%BA%8B%E4%BB%B6%E6%89%A9%E5%B1%95/JS-API.html
@@ -61,5 +61,7 @@ For OpenAPI or cross-system data flows:
 - Confirm token acquisition, app/corp/application IDs, form model IDs, process IDs, and endpoint base path from the target deployment.
 - Prefer server-side or gateway calls for secrets and internal APIs.
 - Log request IDs and normalized errors; never expose raw secrets in UI or exported reports.
+- For Qiqiao-deployed custom pages, runtime token calls may use same-origin OpenAPI when no durable secret is needed; still keep `CorpID`/`Secret` out of frontend files.
+- Treat form-model creation/design as unconfirmed unless a management endpoint has been verified in the target deployment.
 
 For table-like pages, treat schema discovery as mandatory. Ask for or inspect actual fields before building filters, maps, or import/export logic.

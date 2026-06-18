@@ -1,6 +1,6 @@
 # Backend API and Self-Hosted API Reference
 
-Use this for 七巧服务端代码, custom functions, `REST.API`, `applyApi`, `executeServiceAPI`, or calls to the user's own deployed API server.
+Use this for 七巧服务端代码, custom functions, `REST.API`, `applyApi`, `executeServiceAPI`, or calls to the user's own deployed API server. For OpenAPI token acquisition, 数智彩虹 intranet credentials, and UOS test tools, read `openapi-integration.md`.
 
 Official docs:
 - 七巧开发说明: https://qiqiao.do1.com.cn/help/develop_manual/%E4%B8%83%E5%B7%A7%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E.html
@@ -60,7 +60,70 @@ Use a wrapper that:
 - Uses `parent.triggerSocket("REST.API.method(...)", "")` in Qiqiao debug iframe only when present.
 - Sends the runtime POST only when IDs are available.
 - Serializes args with `JSON.stringify`, never manual string concatenation.
-- Reports HTTP status and response body in the UI for debugging.
+- Reports HTTP status, content type, response body snippet, and tried execute URLs in the UI for debugging.
+
+Do not hardcode one execute prefix. Deployments may mount runtime APIs under different path prefixes. Build candidates from the current page path and try the known variants:
+
+```text
+/dev-runtime/api/v1/runtime/business/{applicationId}/{businessId}/custompage/code/execute
+/qiqiao/dev-runtime/api/v1/runtime/business/{applicationId}/{businessId}/custompage/code/execute
+/runtime/api/v1/runtime/business/{applicationId}/{businessId}/custompage/code/execute
+/qiqiao/runtime/api/v1/runtime/business/{applicationId}/{businessId}/custompage/code/execute
+```
+
+If `location.pathname` starts with another product prefix, also derive a prefixed candidate from that first segment.
+
+Guard response parsing. Qiqiao gateways may return an HTML login, 404, reverse-proxy, or error page. This is the common cause of `Unexpected token '<', "<html> <h"... is not valid JSON`.
+
+```js
+function parseServerResponse(text, response) {
+  var contentType = response && response.headers ? response.headers.get("content-type") || "" : "";
+  var trimmed = (text || "").trim();
+  if (!trimmed) return { ok: response.ok, empty: true };
+  if (trimmed.charAt(0) === "<" || contentType.indexOf("text/html") >= 0) {
+    return {
+      ok: false,
+      nonJson: true,
+      message: "Qiqiao execute endpoint returned HTML/non-JSON. Check execute path, publish status, login state, and server-code deployment.",
+      status: response.status,
+      contentType: contentType,
+      snippet: trimmed.slice(0, 500)
+    };
+  }
+  try {
+    return JSON.parse(trimmed);
+  } catch (e) {
+    return {
+      ok: false,
+      nonJson: true,
+      message: e.message,
+      status: response.status,
+      contentType: contentType,
+      snippet: trimmed.slice(0, 500)
+    };
+  }
+}
+```
+
+For production CRUD custom pages, include a visible diagnostics action that runs `API.health()` and `API.diagnose()` and copies a JSON report containing environment, current page IDs, selected business inputs, execute URL candidates, recent frontend errors, recent backend errors, and backend probe results. Redact tokens, secrets, access keys, CorpID/CropID, and accounts.
+
+## Fullstack form CRUD server methods
+
+For protected form writes, prefer this method surface in `server-code.js`:
+
+```js
+var API = {
+  health: function () { return { ok: true, time: new Date().toISOString() }; },
+  diagnose: function () { /* token/schema/query/user probes only; no create */ },
+  schema: function () { /* form model/component summary */ },
+  queryReservations: function (params) { /* read form records */ },
+  resolveUser: function () { /* runtime current user or configured-account fallback */ },
+  createReservation: function (payload) { /* validate conflicts, then create */ },
+  cancelReservation: function (payload) { /* status update, not destructive delete */ }
+};
+```
+
+When `$.context` cannot resolve the current runtime user, a server-side fallback to a configured account is acceptable for smoke testing, but return a `source` such as `context` or `configured-account-fallback` so the page and diagnostic report make the identity path explicit.
 
 ## Self-hosted API strategy
 

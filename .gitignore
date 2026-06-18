@@ -9,3 +9,7 @@ dist/
 build/
 tmp/
 *.log
+qqkf.txt
+*.local.json
+config.local.*
+qiqiao-openapi-tool-*

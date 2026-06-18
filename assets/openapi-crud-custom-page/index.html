@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>数智彩虹表单数据测试页</title>
+</head>
+<body>
+  <main id="app" class="page">
+    <header class="topbar">
+      <div>
+        <h1>表单数据测试</h1>
+        <p id="runtimeStatus">等待初始化</p>
+      </div>
+      <div class="actions">
+        <button id="btnProbe" type="button">连通探测</button>
+        <button id="btnSchema" type="button">读取结构</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <form id="controlPanel" class="panel">
+        <label>
+          应用 ID
+          <input id="applicationId" name="applicationId" autocomplete="off" placeholder="applicationId">
+        </label>
+        <label>
+          表单模型 ID
+          <input id="formModelId" name="formModelId" autocomplete="off" placeholder="formModelId">
+        </label>
+        <label>
+          登录用户 ID
+          <input id="loginUserId" name="loginUserId" autocomplete="off" placeholder="新增/修改需要">
+        </label>
+        <label>
+          记录 ID
+          <input id="recordId" name="recordId" autocomplete="off" placeholder="新增可留空，修改/删除必填">
+        </label>
+        <label>
+          当前 version
+          <input id="version" name="version" type="number" min="0" value="0">
+        </label>
+        <label>
+          变量 JSON
+          <textarea id="variablesJson" spellcheck="false">{"测试文本":"七巧页面测试"}</textarea>
+        </label>
+        <div class="buttonGrid">
+          <button id="btnQuery" type="button">查询</button>
+          <button id="btnCreate" type="button">新增</button>
+          <button id="btnUpdate" type="button">修改</button>
+          <button id="btnDelete" type="button" class="danger">删除</button>
+        </div>
+      </form>
+
+      <section class="result">
+        <div class="resultHeader">
+          <span id="lastAction">未操作</span>
+          <span id="message"></span>
+        </div>
+        <pre id="output"></pre>
+        <div id="records"></div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
