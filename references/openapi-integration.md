@@ -20,6 +20,13 @@ https://e.csg.cn/qiqiao/runtime/api/v1/bpms-integration
 - On local macOS test environments, the public HTTPS path may require `--insecure-skip-verify` because the local CA chain can fail verification.
 - Keep private `CorpID`/`CropID`, `Secret`, admin account, access key, and token in local files, environment variables, or server-side config only.
 
+When the user supplies both internal and external OpenAPI bases, keep both in server-side configuration and auto-select:
+
+- Local/offsite testing should prefer the public HTTPS base first.
+- Qiqiao intranet deployment can prefer the internal HTTP base first.
+- If token acquisition fails on one base, try the next base automatically before surfacing an error.
+- Diagnostics should include the active base name, active base URL, candidate base URLs, and per-base failure messages, but never tokens or secrets.
+
 ## Token flow
 
 Use the same `timestamp` and `random` for both calls:

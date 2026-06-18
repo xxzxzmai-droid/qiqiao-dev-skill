@@ -134,6 +134,15 @@ Limits of local simulation:
 - It can prove frontend bridge code, server-code method dispatch, OpenAPI token/schema/query/create/update behavior, and conflict checks.
 - It cannot prove the real Qiqiao gateway prefix, published-version routing, browser login state, `X-Auth0-Token`, or real `$.context` current-user behavior. Those still need runtime deployment diagnostics.
 
+## Server `$.httpclient` adapter
+
+Do not assume Qiqiao server-side HTTP client methods are lowercase `get`, `post`, and `put`. Some deployments expose uppercase names, Java-backed methods, or a generic `request`/`execute`/`send` method. Backend proxy code should:
+
+- Try lowercase, uppercase, and title-case method names for `GET`, `POST`, and `PUT`.
+- Try generic calls such as `request({ url, method, headers, body })`, `execute(...)`, `send(...)`, or `fetch(...)` when method-specific functions are absent.
+- Include `httpClientMethods` in `API.health()` / `API.diagnose()` using `Object.keys`, `for...in`, known method probes, and Java `getClass().getMethods()` when available.
+- Return a clear diagnostic such as `$.httpclient does not support GET; available methods: ...` instead of only saying the backend is unavailable.
+
 ## Fullstack form CRUD server methods
 
 For protected form writes, prefer this method surface in `server-code.js`:
