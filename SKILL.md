@@ -1,6 +1,6 @@
 ---
 name: qiqiao-dev
-description: "Build, debug, test, package, and guide Qiqiao/七巧/数智彩虹/道一云低代码 work across official user-manual operations and developer-manual extensions: standard app/form/flow/report/PC/mobile page configuration, low-code scripts, custom styles, custom pages, injected index.html/index.css/index.js frontends, server-side custom function code, REST.API/applyApi bridges, page JS event extensions, custom form/page components, form/table/workflow/OpenAPI integrations, event push/webhook integrations, workflow push, portal todo, unified message push, zero-code integration, UOS/Linux OpenAPI test tools, and self-hosted API calls. Use when working on 七巧 IDE, 数智彩虹, 用户手册操作指导, 开发者文档/API 指导, 自定义页面, 服务端代码, 页面JS事件扩展, 表单表格高级 API, custompage code, OpenAPI token/form/workflow CRUD, preview/debug/runtime issues, or Qiqiao delivery packages."
+description: "Use when working on Qiqiao/七巧/数智彩虹/道一云低代码 apps, forms, workflows, reports, PC/mobile pages, low-code scripts, custom styles, custom pages/components, page JS, server APIs, OpenAPI, event/webhook push integrations, UOS/Linux OpenAPI tools, preview/debug/runtime failures, or delivery packages."
 ---
 
 # Qiqiao Dev
@@ -29,6 +29,7 @@ description: "Build, debug, test, package, and guide Qiqiao/七巧/数智彩虹/
    - Server API, `applyApi`, REST bridge, or self-hosted API: read `references/backend-api.md`.
    - Low-code scripts, custom styles, 页面JS事件扩展, 表单, 表格, custom form/page components, or standard UI extension: read `references/forms-tables.md`.
    - 数智彩虹/OpenAPI token, intranet credentials, form/workflow/common OpenAPI, UOS Go test executable, or CRUD test page: read `references/openapi-integration.md`.
+   - OpenAPI behavior that matches known observed deployment errors or prior smoke-test notes: read `references/openapi-observed-notes.md` after the general OpenAPI reference.
    - Event push, workflow push, portal todo integration, unified message push, webhook receivers, or zero-code integration: read `references/integration-events.md`.
    - Loading failures, self-check reports, preview/debug/runtime issues, or final handoff: read `references/debugging-delivery.md`.
 2. Pick the nearest starting asset:
@@ -37,7 +38,7 @@ description: "Build, debug, test, package, and guide Qiqiao/七巧/数智彩虹/
    - Use `assets/openapi-go-tool/` for a local/UOS Linux executable that reads private config or `qqkf.txt`, probes OpenAPI, serves a local CRUD test web UI, and never embeds credentials.
 3. Run `scripts/check_qiqiao_page.py <folder>` before delivery.
 4. When local visual testing is needed, run `scripts/make_injection_harness.py <folder> <out.html>` and open the generated harness. Do not paste the harness into Qiqiao; paste the original three files.
-5. For UOS/OpenAPI tools, run `go test ./...`, cross-compile with `GOOS=linux GOARCH=amd64`, and provide the executable path plus the exact command using a private config path.
+5. For UOS/OpenAPI tools, run `go test ./...`, cross-compile with `GOOS=linux GOARCH=amd64`, and provide the executable path plus an explicit `--base-url` or private config path.
 6. Deliver `index.html`, `index.css`, `index.js`, optional `server-code.js`, generated executable paths, and concise paste/run instructions. Include a single-file fallback only when Qiqiao injection is unavailable or the user asks for it.
 
 ## Implementation Checklist

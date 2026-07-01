@@ -2,6 +2,18 @@
 
 Use this when the user asks how to operate Qiqiao/七巧/数智彩虹, asks what the platform supports, or needs a route from business requirements to either configuration or code.
 
+## Contents
+
+- Official entry points
+- Coverage map
+- User-manual operating model
+- App, page, and model routing
+- Forms
+- Flows
+- PC and mobile pages
+- Developer-manual routing
+- Escalation rules
+
 ## Official entry points
 
 - User manual: https://qiqiao.do1.com.cn/help/user_manual/%E4%B8%83%E5%B7%A7%E4%BD%8E%E4%BB%A3%E7%A0%81%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8.html

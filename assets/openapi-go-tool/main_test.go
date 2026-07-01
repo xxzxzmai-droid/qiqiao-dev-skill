@@ -82,6 +82,19 @@ func TestNormalizeBaseURL(t *testing.T) {
 	}
 }
 
+func TestLoadConfigDoesNotInjectDeploymentBaseURL(t *testing.T) {
+	cfg, err := LoadConfig("", "")
+	if err != nil {
+		t.Fatalf("LoadConfig returned error: %v", err)
+	}
+	if cfg.BaseURL != "" {
+		t.Fatalf("base URL should be explicitly configured, got %q", cfg.BaseURL)
+	}
+	if err := validateAuthConfig(Config{CorpID: "corp", Secret: "11111111111111111111111111111111", Account: "tester"}); err == nil {
+		t.Fatalf("validateAuthConfig should require an explicit base URL")
+	}
+}
+
 func TestDecodeJSONBodyAcceptsCompleteJSONWithUnexpectedEOF(t *testing.T) {
 	var env APIEnvelope
 	err := decodeJSONBody([]byte(`{"code":0,"msg":"执行成功","data":[]}`), io.ErrUnexpectedEOF, &env, "test")

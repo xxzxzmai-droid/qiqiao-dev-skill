@@ -49,6 +49,7 @@ or:
 - `assets/openapi-go-tool/`: Go source for UOS/Linux OpenAPI probe and local CRUD test web UI
 - `scripts/check_qiqiao_page.py`: validates Qiqiao three-file delivery rules
 - `scripts/make_injection_harness.py`: creates a local preview harness by injecting CSS/JS
+- `scripts/check_public_skill.py`: validates public-skill concision and deployment-neutrality rules
 
 ## Validate
 
@@ -56,6 +57,7 @@ or:
 python3 scripts/check_qiqiao_page.py assets/custom-page-injection
 python3 scripts/check_qiqiao_page.py assets/openapi-crud-custom-page
 python3 scripts/make_injection_harness.py assets/custom-page-injection /tmp/qiqiao-harness.html
+python3 scripts/check_public_skill.py
 cd assets/openapi-go-tool && go test ./...
 ```
 
@@ -67,7 +69,7 @@ Build the UOS test executable from `assets/openapi-go-tool`:
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o qiqiao-openapi-tool-uos-amd64 .
 ```
 
-Default OpenAPI base URL is `https://e.csg.cn/qiqiao/runtime/api/v1/bpms-integration`. Use `--insecure-skip-verify` only when the local certificate chain is unavailable.
+No OpenAPI base URL is hardcoded. Provide `baseUrl` in a private config file or pass `--base-url https://<qiqiao-host>/qiqiao/runtime/api/v1/bpms-integration`. Use `--insecure-skip-verify` only when the local certificate chain is unavailable.
 
 Run a broader test against an existing test form:
 

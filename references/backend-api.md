@@ -2,6 +2,16 @@
 
 Use this for 七巧服务端代码, custom functions, low-code backend scripts, function-library usage, `REST.API`, `applyApi`, `executeServiceAPI`, or calls to the user's own deployed API server. For OpenAPI token acquisition, 数智彩虹 intranet credentials, and UOS test tools, read `openapi-integration.md`.
 
+## Contents
+
+- Server code shape
+- Function-library usage
+- Custom page frontend bridge
+- Local runtime simulator
+- Server `$.httpclient` adapter
+- Fullstack form CRUD server methods
+- Self-hosted API strategy
+
 Official docs:
 - 七巧开发说明: https://qiqiao.do1.com.cn/help/develop_manual/%E4%B8%83%E5%B7%A7%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E.html
 - 自定义页面使用教程: https://qiqiao.do1.com.cn/help/develop_manual/%E8%87%AA%E5%AE%9A%E4%B9%89%E9%A1%B5%E9%9D%A2/%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.html

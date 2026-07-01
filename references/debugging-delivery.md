@@ -2,6 +2,13 @@
 
 Use this for Qiqiao loading failures, self-check reports, packaging, and handoff.
 
+## Contents
+
+- Known Qiqiao loading behavior
+- Failure triage
+- Validation
+- Handoff checklist
+
 ## Known Qiqiao loading behavior
 
 Observed and expected from the docs:

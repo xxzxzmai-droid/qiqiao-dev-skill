@@ -2,6 +2,16 @@
 
 Use this for low-code scripts, custom CSS styles, 页面JS事件扩展, 表单字段联动, 表格/表单高级 API, custom form/page components, OpenAPI-adjacent form logic, and integrations outside the custom page IDE. For 数智彩虹 intranet token flows, UOS test binaries, and form data CRUD tooling, also read `openapi-integration.md`.
 
+## Contents
+
+- Low-code scripts
+- Custom styles
+- Page JS event extension
+- Form context
+- Custom form components
+- Custom page components
+- OpenAPI and table/form integrations
+
 Official docs:
 - 低代码脚本: https://qiqiao.do1.com.cn/help/develop_manual/%E4%BD%8E%E4%BB%A3%E7%A0%81%E8%84%9A%E6%9C%AC.html
 - 低代码函数库: https://qiqiao.do1.com.cn/help/develop_manual/%E4%BD%8E%E4%BB%A3%E7%A0%81%E5%87%BD%E6%95%B0%E5%BA%93.html

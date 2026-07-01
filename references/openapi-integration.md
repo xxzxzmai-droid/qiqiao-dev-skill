@@ -2,6 +2,19 @@
 
 Use this for 数智彩虹 intranet OpenAPI work, token acquisition, form data CRUD, workflow OpenAPI, common user/department/application APIs, private `qqkf.txt` credentials, Linux/UOS test executables, and Qiqiao-deployed CRUD test pages.
 
+## Contents
+
+- Deployment vocabulary
+- Token flow and rate limits
+- Form data OpenAPI
+- Capability boundaries
+- Intranet proxy diagnosis
+- UOS Go executable asset
+- Qiqiao-deployed CRUD page asset
+- Production form CRUD through server-code
+- Workflow and common OpenAPI
+- Error handling
+
 Official docs:
 - OpenAPI: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0/OpenAPI.html
 - OpenAPI 使用指南: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0/OpenAPI/OpenAPI%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.html
@@ -14,10 +27,10 @@ Official docs:
 ## Deployment vocabulary
 
 - 数智彩虹 is the user's internal deployment of Qiqiao/七巧. Treat both names as the same platform unless the user says otherwise.
-- The current tested OpenAPI base is:
+- OpenAPI base URLs are deployment-specific. Ask the user for the target base or read it from private config. The common path shape is:
 
 ```text
-https://e.csg.cn/qiqiao/runtime/api/v1/bpms-integration
+https://<qiqiao-host>/qiqiao/runtime/api/v1/bpms-integration
 ```
 
 - Internal deployments may also expose `http://<intranet-host>/qiqiao/runtime/api/v1/bpms-integration`, but do not use `10.*` as the default unless the user asks for that path.
@@ -55,7 +68,7 @@ Rules:
 - Respect the documented low-frequency limit. Prefer one `probe` run, then targeted calls.
 - The official guide says AccessKey/Token acquisition is limited to a low frequency and token validity is finite. Cache by base/corp/account and refresh only when expired or explicitly rejected.
 - Do not intentionally probe the exact production rate-limit threshold by "calling until it fails". That burns the same limit window real users need. Use a write queue with fast-first behavior, short spacing only between queued writes, and retry/backoff only after a real rate-limit response.
-- When calling the public `https://e.csg.cn/...` base from local scripts, use the reference script's browser-like `User-Agent` and `Accept` headers. A bare HTTP client may receive a `403` HTML gateway response even when credentials are correct.
+- When calling an HTTPS gateway from local scripts, use browser-like `User-Agent` and `Accept` headers. A bare HTTP client may receive an HTML gateway response even when credentials are correct.
 
 If a deployed report first shows token/schema/query success and later fails with `access_key 失败：超出请求频率限制`, treat the OpenAPI path as connected but over-called. Reduce calls before changing credentials or base URLs:
 
@@ -89,13 +102,13 @@ POST   /open/applications/{applicationId}/forms/{formModelId}/batch_update
 POST   /open/applications/{applicationId}/forms/{formModelId}/batch_delete
 ```
 
-The user's captured API directory (`qqkf.txt`) also lists:
+Some captured API directories may also list:
 
 ```text
 PUT    /open/applications/{applicationId}/forms/batch_update_by_condition
 ```
 
-Treat this as a conditional batch-update probe, not a confirmed stable endpoint, until the target deployment accepts the payload shape. On the current 数智彩虹 test app, the documented path returned `5500031 表单不存在` when passed `formModelId` in the body; common path/query variants returned `系统繁忙，请稍后再试`.
+Treat this as a conditional batch-update probe, not a confirmed stable endpoint, until the target deployment accepts the payload shape.
 
 Single-record create payload shape:
 
@@ -156,13 +169,13 @@ For editable personal-record lists, update only safe business fields through a v
 
 ## Intranet proxy diagnosis
 
-When a `10.*` base URL returns `502` and the remote IP is `127.0.0.1`, the local proxy probably intercepted an intranet URL. Prefer the public `https://e.csg.cn/...` base when the user provides it. If the user specifically needs the intranet path, test direct access before changing code:
+When a `10.*` base URL returns `502` and the remote IP is `127.0.0.1`, the local proxy probably intercepted an intranet URL. Prefer an externally reachable HTTPS base when the user provides one. If the user specifically needs the intranet path, test direct access before changing code:
 
 ```bash
 curl --noproxy '*' -m 8 http://<intranet-qiqiao-host>/qiqiao/runtime/api/v1/bpms-integration/
 ```
 
-For Go tools, use the public base by default. Enable `--use-proxy` only when the target path requires the system proxy; otherwise keep direct transport for intranet addresses.
+For Go tools, pass the intended base explicitly through `--base-url` or private config. Enable `--use-proxy` only when the target path requires the system proxy; otherwise keep direct transport for intranet addresses.
 
 ## UOS Go executable asset
 
@@ -179,8 +192,8 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o qiq
 Typical intranet run:
 
 ```bash
-./qiqiao-openapi-tool-uos-amd64 --qqkf /path/to/qqkf.txt --mode probe
-./qiqiao-openapi-tool-uos-amd64 --qqkf /path/to/qqkf.txt --insecure-skip-verify --mode serve --listen 0.0.0.0:8787
+./qiqiao-openapi-tool-uos-amd64 --qqkf /path/to/qqkf.txt --base-url https://<qiqiao-host>/qiqiao/runtime/api/v1/bpms-integration --mode probe
+./qiqiao-openapi-tool-uos-amd64 --qqkf /path/to/qqkf.txt --base-url https://<qiqiao-host>/qiqiao/runtime/api/v1/bpms-integration --insecure-skip-verify --mode serve --listen 0.0.0.0:8787
 ```
 
 Modes:
@@ -206,7 +219,7 @@ Private config shape:
 
 ```json
 {
-  "baseUrl": "https://e.csg.cn/qiqiao/runtime/api/v1/bpms-integration",
+  "baseUrl": "https://<qiqiao-host>/qiqiao/runtime/api/v1/bpms-integration",
   "corpId": "...",
   "secret": "...",
   "account": "...",
@@ -255,26 +268,9 @@ Backend `diagnose()` must not return token, access key, secret, raw CorpID/CropI
 
 If diagnostics show `hasHttpClient: true` and methods such as `sendGet/sendPost/sendPut/sendDel`, but token/schema/query all fail with `Can't find method ... sendGet(org.mozilla.javascript.ConsString,object,org.mozilla.javascript.Undefined)`, fix the adapter argument types before changing base URLs or credentials. The correct first probe is a plain URI, params `HashMap`, and headers `HashMap`.
 
-## Verified existing-form management surface
+## Observed deployment notes
 
-Against the user's current test form, the existing-form API path has been verified for:
-
-- Token acquisition with the public base URL.
-- Current user lookup by account.
-- Form component schema retrieval.
-- Existing form record query.
-- Single-record create, get by ID, filter by ID, update with the current version, and delete.
-- Batch save, batch update using `version + 1`, and batch delete cleanup.
-- Workflow definition list returns successfully, even when no workflow definitions exist.
-
-The observed test form field types include `textBox`, `textarea`, `fileupload`, `time`, `date`, and `imageUpload`. `full-smoke` populates safe text/time/date fields automatically and skips file/image fields unless `--upload-file` is provided.
-
-Observed non-blocking behaviors:
-- Generic `applications.list` and `form_models.list` may return `系统繁忙，请稍后再试`; the specific application/form endpoints can still work.
-- File upload can succeed, but may also intermittently return `系统繁忙，请稍后再试`; treat it as optional unless the current task is specifically file handling.
-- `PUT /open/applications/{applicationId}/forms/batch_update_by_condition` is listed in `qqkf.txt`, but is not verified on the current deployment. Use the ordinary single-record or batch-update endpoints for production behavior unless this endpoint is separately confirmed.
-
-Do not use OpenAPI to create form models or add fields unless a separate management/build endpoint has been supplied and verified. The public OpenAPI docs list form model/component reads, not form designer writes.
+For prior smoke-test observations and non-blocking platform responses, read `openapi-observed-notes.md` only when the current task matches those symptoms. Keep this file focused on general rules.
 
 ## Workflow OpenAPI
 

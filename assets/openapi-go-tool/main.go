@@ -25,8 +25,6 @@ import (
 	"time"
 )
 
-const DefaultBaseURL = "https://e.csg.cn/qiqiao/runtime/api/v1/bpms-integration"
-
 type Config struct {
 	BaseURL            string `json:"baseUrl"`
 	CorpID             string `json:"corpId"`
@@ -94,7 +92,7 @@ func main() {
 		uploadFilePath   string
 	)
 
-	cfg := Config{BaseURL: DefaultBaseURL, TimeoutSeconds: 20}
+	cfg := Config{TimeoutSeconds: 20}
 
 	flag.StringVar(&mode, "mode", "serve", "mode: serve, probe, schema, crud-smoke, full-smoke, design-probe")
 	flag.StringVar(&listen, "listen", "127.0.0.1:8787", "listen address for serve mode")
@@ -157,7 +155,7 @@ func ParseQQKF(r io.Reader) (Config, error) {
 		return Config{}, err
 	}
 	text := string(body)
-	cfg := Config{BaseURL: DefaultBaseURL, TimeoutSeconds: 20}
+	cfg := Config{TimeoutSeconds: 20}
 
 	cfg.CorpID = firstGroup(text, `(?m)(?:CorpID|CropID|企业I[Dd]|企业Id)[：:]\s*([^\s]+)`)
 	cfg.Secret = firstGroup(text, `(?m)Secret[：:]\s*([0-9a-fA-F]{32})`)
@@ -179,7 +177,7 @@ func ParseQQKF(r io.Reader) (Config, error) {
 }
 
 func LoadConfig(configPath, qqkfPath string) (Config, error) {
-	cfg := Config{BaseURL: DefaultBaseURL, TimeoutSeconds: 20}
+	cfg := Config{TimeoutSeconds: 20}
 	if qqkfPath != "" {
 		f, err := os.Open(qqkfPath)
 		if err != nil {
