@@ -1,4 +1,4 @@
 interface:
   display_name: "七巧开发"
-  short_description: "开发七巧/数智彩虹自定义页面、服务端代码、OpenAPI 表单 CRUD、UOS 测试工具和注入式三文件交付。"
-  default_prompt: "使用七巧开发 skill，按七巧注入式前端、服务端 API、OpenAPI 鉴权/表单 CRUD、预览/调试/发布差异和自检流程完成开发。"
+  short_description: "开发并指导七巧/数智彩虹页面、后端、OpenAPI 和官方手册操作。"
+  default_prompt: "Use $qiqiao-dev to guide or build 七巧/数智彩虹 work from the official manuals through custom pages, server APIs, OpenAPI CRUD, and delivery validation."

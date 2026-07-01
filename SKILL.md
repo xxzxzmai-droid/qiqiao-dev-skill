@@ -1,6 +1,6 @@
 ---
 name: qiqiao-dev
-description: Build, debug, test, and package Qiqiao/七巧/数智彩虹/道一云低代码 custom pages, injected index.html/index.css/index.js frontends, server-side custom function code, REST.API/applyApi bridges, page JS event extensions, custom form/page components, form/table/OpenAPI integrations, UOS/Linux OpenAPI test tools, and self-hosted API calls. Use when working on 七巧 IDE, 数智彩虹, 自定义页面, 服务端代码, 页面JS事件扩展, 表单表格高级 API, custompage code, OpenAPI token/form CRUD, preview/debug/runtime issues, or Qiqiao delivery packages.
+description: "Build, debug, test, package, and guide Qiqiao/七巧/数智彩虹/道一云低代码 work across official user-manual operations and developer-manual extensions: custom pages, injected index.html/index.css/index.js frontends, server-side custom function code, REST.API/applyApi bridges, page JS event extensions, custom form/page components, form/table/OpenAPI integrations, UOS/Linux OpenAPI test tools, and self-hosted API calls. Use when working on 七巧 IDE, 数智彩虹, 用户手册操作指导, 开发者文档/API 指导, 自定义页面, 服务端代码, 页面JS事件扩展, 表单表格高级 API, custompage code, OpenAPI token/form CRUD, preview/debug/runtime issues, or Qiqiao delivery packages."
 ---
 
 # Qiqiao Dev
@@ -18,10 +18,12 @@ description: Build, debug, test, and package Qiqiao/七巧/数智彩虹/道一�
 - Treat 数智彩虹 as the user's intranet deployment of Qiqiao. Use the same Qiqiao rules, but expect intranet base URLs, private credentials, and proxy/NO_PROXY issues.
 - Never paste `CorpID`/`Secret`/admin account/token values into final answers, frontend code, public skill files, screenshots, or logs. Use private config files, environment variables, or local-only `qqkf.txt` parsing.
 - Do not claim OpenAPI can create or design form models unless the target deployment exposes and verifies a form-design management endpoint. The documented OpenAPI surface covers form data CRUD, form model/component lookup, files, workflow, users/departments, and workflow design definitions.
+- Prefer standard Qiqiao configuration before code when the user only needs app/form/flow/page operations. Use official user-manual guidance for 操作路径 and developer-manual guidance only when configuration is insufficient.
 
 ## Workflow
 
 1. Classify the task:
+   - Official user-manual operation guidance, platform capability routing, or choosing between no-code/low-code/high-code paths: read `references/official-manual.md`.
    - Custom page / 三文件 IDE delivery: read `references/custom-page.md`.
    - Server API, `applyApi`, REST bridge, or self-hosted API: read `references/backend-api.md`.
    - 页面JS事件扩展, 表单, 表格, custom components, or OpenAPI: read `references/forms-tables.md`.
@@ -61,3 +63,4 @@ description: Build, debug, test, and package Qiqiao/七巧/数智彩虹/道一�
 - For current-user detection in fullstack custom pages, do not rely only on `$.context.getCurrentUserId()` or placeholder names. Try `$.context.getCurrentUser()`, then `$.contact.getUserById(userId)`, and include a `userProbe` in diagnostics.
 - For intranet OpenAPI calls to `10.*`, check proxy environment first. A 502 from `127.0.0.1` usually means the local proxy intercepted an intranet URL; retry with direct/no-proxy before changing API code.
 - Respect Qiqiao OpenAPI rate limits; cache token results, avoid repeated destructive smoke tests, and prefer schema/probe reads before create/update/delete.
+- When giving non-code guidance, answer in the shape: 操作入口 -> 配置步骤 -> 发布/启用 -> 验证点 -> 需要代码扩展的边界.
