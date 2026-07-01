@@ -1,9 +1,13 @@
 # OpenAPI, 数智彩虹, and UOS Tooling Reference
 
-Use this for 数智彩虹 intranet OpenAPI work, token acquisition, form data CRUD, private `qqkf.txt` credentials, Linux/UOS test executables, and Qiqiao-deployed CRUD test pages.
+Use this for 数智彩虹 intranet OpenAPI work, token acquisition, form data CRUD, workflow OpenAPI, common user/department/application APIs, private `qqkf.txt` credentials, Linux/UOS test executables, and Qiqiao-deployed CRUD test pages.
 
 Official docs:
 - OpenAPI: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0/OpenAPI.html
+- OpenAPI 使用指南: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0/OpenAPI/OpenAPI%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.html
+- 表单 OpenAPI: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0/OpenAPI/%E8%A1%A8%E5%8D%95OpenAPI.html
+- 流程 OpenAPI: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0/OpenAPI/%E6%B5%81%E7%A8%8BOpenAPI.html
+- 通用 OpenAPI: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0/OpenAPI/%E9%80%9A%E7%94%A8OpenAPI.html
 - 开放平台: https://qiqiao.do1.com.cn/help/develop_manual/%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0.html
 - 自定义页面使用教程: https://qiqiao.do1.com.cn/help/develop_manual/%E8%87%AA%E5%AE%9A%E4%B9%89%E9%A1%B5%E9%9D%A2/%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.html
 
@@ -49,6 +53,7 @@ Rules:
 - Cache the token during a test run; do not request it for every button click.
 - Do not print token values. Redact as first 6 + `***` + last 4 if a diagnostic needs proof.
 - Respect the documented low-frequency limit. Prefer one `probe` run, then targeted calls.
+- The official guide says AccessKey/Token acquisition is limited to a low frequency and token validity is finite. Cache by base/corp/account and refresh only when expired or explicitly rejected.
 - Do not intentionally probe the exact production rate-limit threshold by "calling until it fails". That burns the same limit window real users need. Use a write queue with fast-first behavior, short spacing only between queued writes, and retry/backoff only after a real rate-limit response.
 - When calling the public `https://e.csg.cn/...` base from local scripts, use the reference script's browser-like `User-Agent` and `Accept` headers. A bare HTTP client may receive a `403` HTML gateway response even when credentials are correct.
 
@@ -270,3 +275,37 @@ Observed non-blocking behaviors:
 - `PUT /open/applications/{applicationId}/forms/batch_update_by_condition` is listed in `qqkf.txt`, but is not verified on the current deployment. Use the ordinary single-record or batch-update endpoints for production behavior unless this endpoint is separately confirmed.
 
 Do not use OpenAPI to create form models or add fields unless a separate management/build endpoint has been supplied and verified. The public OpenAPI docs list form model/component reads, not form designer writes.
+
+## Workflow OpenAPI
+
+Use workflow OpenAPI for process-instance and task operations, not for designing form models.
+
+Documented workflow surfaces include:
+- Start process instance.
+- Terminate/delete process instances.
+- Query todos, have-dones, initiates, process instance details, current tasks, history, process diagrams, definitions, and versions.
+- Get next approvers or designated next nodes.
+- Complete, return, recover, circulate, entrust, and add relevant users where the deployment permits it.
+- Get the form bound to a workflow definition.
+
+Rules:
+- Confirm `modelId` / `processModelId`, `processInstanceId`, `taskId`, `loginUserId`, and current handler identity before task actions.
+- Treat task actions as state transitions with permission and concurrency constraints. Return clear messages for "current user is not current handler", "data modified", and "flow condition not met" style errors.
+- Do not use workflow OpenAPI to bypass configured node handlers, field permissions, or launch/visibility scope.
+- For mobile/PC pages that initiate or complete workflow tasks, keep field permission expectations aligned with the platform workflow configuration.
+
+## Common OpenAPI
+
+Use common OpenAPI for directory and application lookup:
+
+- Departments: root, parent, children, by ID, batch list.
+- Users: by account, by ID, batch list, by department, search.
+- Applications and process-center/todo summary APIs when authorized.
+
+Prefer server-side `$.contact` in Qiqiao server code when available; use common OpenAPI when the call happens from an external system, local UOS tool, or server surface without contact-library access.
+
+## Error handling
+
+- Normalize platform error responses into `{ ok:false, code, message, detail }`.
+- Map common auth errors separately from business errors: missing permission, expired token, invalid account, missing `loginUserId`, rate limit, and form/workflow version conflicts.
+- Preserve original platform `code` in diagnostics, but redact credentials and tokens.

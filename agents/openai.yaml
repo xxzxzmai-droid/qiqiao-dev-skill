@@ -1,4 +1,4 @@
 interface:
   display_name: "七巧开发"
-  short_description: "开发并指导七巧/数智彩虹页面、后端、OpenAPI 和官方手册操作。"
-  default_prompt: "Use $qiqiao-dev to guide or build 七巧/数智彩虹 work from the official manuals through custom pages, server APIs, OpenAPI CRUD, and delivery validation."
+  short_description: "覆盖七巧/数智彩虹配置、脚本、页面、组件、OpenAPI、推送集成与交付。"
+  default_prompt: "Use $qiqiao-dev to guide or build 七巧/数智彩虹 work across official manuals, standard configuration, scripts, custom pages/components, OpenAPI, push integrations, and delivery validation."

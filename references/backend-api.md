@@ -1,6 +1,6 @@
 # Backend API and Self-Hosted API Reference
 
-Use this for 七巧服务端代码, custom functions, `REST.API`, `applyApi`, `executeServiceAPI`, or calls to the user's own deployed API server. For OpenAPI token acquisition, 数智彩虹 intranet credentials, and UOS test tools, read `openapi-integration.md`.
+Use this for 七巧服务端代码, custom functions, low-code backend scripts, function-library usage, `REST.API`, `applyApi`, `executeServiceAPI`, or calls to the user's own deployed API server. For OpenAPI token acquisition, 数智彩虹 intranet credentials, and UOS test tools, read `openapi-integration.md`.
 
 Official docs:
 - 七巧开发说明: https://qiqiao.do1.com.cn/help/develop_manual/%E4%B8%83%E5%B7%A7%E5%BC%80%E5%8F%91%E8%AF%B4%E6%98%8E.html
@@ -37,6 +37,26 @@ Rules:
 - Return plain JSON-safe data. Avoid returning platform objects directly.
 - Use `$.context` and Qiqiao function libraries only after confirming they exist in the current server-code surface.
 - Do not hardcode user secrets, OpenAPI secrets, gateway tokens, or internal passwords in frontend code.
+- Prefer `$` function libraries for in-platform contact/form/context/date/json/message/log work. Use OpenAPI or external HTTP only when the required data crosses system boundaries or the function library is unavailable.
+
+## Function-library usage
+
+The official function library is broad. Treat these as capability groups, then inspect the exact current doc or runtime methods before using a specific function:
+
+- `$.contact`: users, departments, user groups, managers, accounts, keywords, direct/indirect reports.
+- `$.context`: current app/user/form/process/page IDs and runtime context.
+- `$.form`: form model/data helpers, main/sub-form reads and writes, document operations.
+- `$.process`: process/task helpers where exposed by the current runtime.
+- `$.date`: string/date/timestamp conversion and current date.
+- `$.json`: JSON object/array conversion.
+- `$.message`: station messages and user-facing debug notification patterns.
+- `$.log`: `info`, `debug`, `warn`, `error` style logging.
+
+Rules:
+- Convert Java collections/DTOs into plain objects/arrays before returning to custom-page frontend code.
+- Use `Packages.java.util.ArrayList` / `HashMap` only inside server-side Rhino-style code; never in frontend `index.js`.
+- Keep debug station messages temporary; remove them or gate them before formal delivery.
+- Prefer `$.contact.getUserByUserAccount(account)` / `$.contact.getUserById(id)` before spending OpenAPI token quota on user resolution.
 
 ## Custom page frontend bridge
 

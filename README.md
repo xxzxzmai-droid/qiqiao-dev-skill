@@ -4,11 +4,13 @@ Codex skill for Qiqiao / 七巧 / 道一云低代码 development.
 
 It helps build, debug, and package:
 
+- official user-manual guidance for app, form, workflow, report, PC/mobile page, permission, integration, automation, and AI configuration
+- low-code scripts, function-library usage, custom styles, page JS event extensions, and custom form/page components
 - Qiqiao custom pages using injected `index.html`, `index.css`, and `index.js`
 - server-side custom function code with `var API = { ... }`
 - `REST.API` / `applyApi` bridges
-- page JS event extensions
-- form/table/OpenAPI integration patterns
+- form/table/workflow/common OpenAPI integration patterns
+- event push, workflow push, portal todo, unified message push, webhook receiver, and zero-code integration routing
 - 数智彩虹 intranet OpenAPI token and form CRUD test tooling
 - Linux/UOS OpenAPI probe and local CRUD web server executable source
 - self-hosted API integration guidance
@@ -41,7 +43,7 @@ or:
 ## Contents
 
 - `SKILL.md`: main skill instructions and trigger description
-- `references/`: Qiqiao custom page, backend API, form/table, and delivery notes
+- `references/`: official-manual routing, Qiqiao custom page, backend API, form/table/component, OpenAPI, push integration, and delivery notes
 - `assets/custom-page-injection/`: injected custom page template with frontend/backend diagnostics
 - `assets/openapi-crud-custom-page/`: Qiqiao-deployed form CRUD test page with no durable frontend secret
 - `assets/openapi-go-tool/`: Go source for UOS/Linux OpenAPI probe and local CRUD test web UI

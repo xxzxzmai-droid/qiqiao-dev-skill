@@ -22,6 +22,31 @@ Use this when the user asks how to operate Qiqiao/七巧/数智彩虹, asks what
 
 If the user asks for exact current UI wording, re-open the relevant official page before answering because product docs may change.
 
+## Coverage map
+
+The official help tree currently covers these broad user-manual areas. Use this as a routing checklist before deciding that code is required:
+
+- 我的应用 / 应用管理 / 应用开发: app creation, page management, model management, application settings, publishing.
+- 数据&集成 / 数据工厂: data sources, integration, data processing, import/export-style platform configuration.
+- 低码中心 / 低码引擎: script lists, execution logs, online debugging, CSS style extensions, JS script extensions, custom components.
+- 系统管理 / 全局 / 通讯录: role and app permissions, process permissions, admin accounts, operation logs, system extensions, SSO, official account/service account/email/unified-todo integration, external users.
+- 表单设计: global properties, layouts, base components, relation components, ER view, validation, style, field permissions.
+- 流程设计 / 业务编排: approval flows, workflow/business-flow design, nodes, routing, actions, workflow logs, triggering workflows.
+- 报表设计 / 聚合表: charts, BI/report pages, aggregation, aggregate query, logs, usage limits.
+- PC端页面设计 / 移动端页面设计 / 公共类组件: standard page components, lists, forms, reports, boards, todos, navigation, buttons, print/QR use cases, custom pages.
+- 自动化（智能助手） / 智能助手 / 七巧AI: automatic reminders/tasks, assistant enablement/logs, AI-assisted platform features.
+- 第三方集成: enterprise WeChat, DingTalk, Feishu and related platform integration.
+
+Developer manual coverage:
+
+- 七巧开发说明 and 自定义对象: platform object models for contact, form, process, validation, and paging.
+- 低代码函数库 and 低代码脚本: `$` function libraries, script authoring, logs, online debugging, scenarios.
+- 自定义样式: CSS extension scope, runtime element inspection, PC/mobile isolation.
+- 页面JS事件扩展: exported functions, context APIs, callback parameters, scenario examples.
+- 自定义表单组件 and 自定义页面组件: component packaging, Vue/component code, props/events/settings, publish and permission scope.
+- 自定义页面: four-file custom page IDE, preview/debug/publish, server-code API bridge.
+- 开放平台: OpenAPI, form/workflow/common APIs, event push, workflow push, portal todo integration, unified message push, and zero-code integration.
+
 ## User-manual operating model
 
 Guide ordinary configuration work before proposing code:
@@ -81,9 +106,11 @@ Use developer features only when standard configuration is insufficient:
 
 - Low-code scripts: JavaScript syntax, platform APIs, Java class access when available, save-effective editing, code completion, formatting, and syntax validation. Prefer closure/IIFE patterns when writing scripts in platform editors.
 - Page JS event extension: exported functions run with `this.context`, `this.utils`, `this.business`, and event callback parameters. Use runtime/F12 inspection for exact parameters. Read `forms-tables.md` for patterns.
+- Custom styles: use for CSS-only presentation changes across form, flow, app page, or global page surfaces. Inspect runtime DOM/classes first, scope selectors tightly, and separate PC/mobile rules.
 - Custom page IDE: four files only: `index.html`, `index.css`, `index.js`, and one backend custom function file. Preview is frontend-only; debug can hit backend breakpoints/logs; publish creates the runtime version users see. Read `custom-page.md` and `backend-api.md`.
 - Custom page bridge: frontend calls backend `API` methods through `applyApi`/execute with `applicationId`, `businessId`, and `X-Auth0-Token`. Keep guarded parsing and deployment-prefix diagnostics from `backend-api.md`.
-- OpenAPI: documented categories include contact/user/department, form, workflow, message, auth, material/file, and related common APIs. Read `openapi-integration.md` before implementing auth, form CRUD, or UOS tooling.
+- OpenAPI: documented categories include contact/user/department, form, workflow, message, auth, material/file, and related common APIs. Read `openapi-integration.md` before implementing auth, form/workflow CRUD, or UOS tooling.
+- Push integrations: use event push for form-data changes, workflow push/portal todo for todo/read/done data, and unified message push for message-card synchronization. Read `integration-events.md`.
 - Custom form components: use when the standard form component set cannot provide the UI/data behavior. Expect richer UI, combined elements, data-set usage, and independent iteration.
 - Custom page components: use when reusable JS/CSS/Vue page components are needed across PC/H5/mini-program surfaces, including component-to-component data passing, linkage, dynamic visibility, and property association.
 
@@ -93,3 +120,4 @@ Use developer features only when standard configuration is insufficient:
 - If the user asks for a working artifact, implement and validate using the relevant development references.
 - If user-supplied field names, IDs, permissions, or deployment URLs are missing, inspect the target app/export/API when possible; otherwise state the exact missing platform facts.
 - If a feature crosses system boundaries, secrets, or intranet access, keep secrets server-side and use OpenAPI/event/bridge diagnostics instead of frontend-only calls.
+- If a task involves an official feature that is configuration-only in the manual, provide exact setup guidance and verification points instead of manufacturing a code artifact.
